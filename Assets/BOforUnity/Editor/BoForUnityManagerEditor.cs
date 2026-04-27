@@ -26,6 +26,8 @@ namespace BOforUnity.Editor
         //private SerializedProperty endSimProp;
         private SerializedProperty welcomePanelProp;
         private SerializedProperty optimizerStatePanelProp;
+        private SerializedProperty localPythonProp;
+        private SerializedProperty pythonPathProp;
         
         private SerializedProperty nSamplingIterProp;
         private SerializedProperty nOptimizationIterProp;
@@ -95,6 +97,8 @@ namespace BOforUnity.Editor
             nextButtonProp = serializedObject.FindProperty("nextButton");
             welcomePanelProp = serializedObject.FindProperty("welcomePanel");
             optimizerStatePanelProp = serializedObject.FindProperty("optimizerStatePanel");
+            localPythonProp = serializedObject.FindProperty("localPython");
+            pythonPathProp = serializedObject.FindProperty("pythonPath");
             //endSimProp = serializedObject.FindProperty("endOfSimulation");
             
             nSamplingIterProp = serializedObject.FindProperty("numSamplingIterations");
@@ -141,8 +145,6 @@ namespace BOforUnity.Editor
 
         public override void OnInspectorGUI()
         {
-            BoForUnityManager script = (BoForUnityManager)target;
-
             serializedObject.Update();
 
             GUILayout.Box(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(2));
@@ -151,12 +153,12 @@ namespace BOforUnity.Editor
             EditorGUILayout.Space();
             objectiveList.DoLayoutList();
 
-            DrawSettingsConfiguration(script);
+            DrawSettingsConfiguration();
 
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawSettingsConfiguration(BoForUnityManager script)
+        private void DrawSettingsConfiguration()
         {
             GUILayout.Box(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(3));
 
@@ -164,12 +166,12 @@ namespace BOforUnity.Editor
             EditorGUILayout.LabelField("Python Settings", EditorStyles.boldLabel);
             var localPyLabel = new GUIContent("Manually Installed Python",
                 "Use a locally installed Python instead of the project’s installer.");
-            script.setLocalPython(EditorGUILayout.Toggle(localPyLabel, script.getLocalPython()));
+            EditorGUILayout.PropertyField(localPythonProp, localPyLabel);
             EditorGUILayout.Space();
 
-            if (script.getLocalPython())
+            if (localPythonProp.boolValue)
             {
-                script.setPythonPath(EditorGUILayout.TextField("Path of Python Executable:", script.getPythonPath()));
+                EditorGUILayout.PropertyField(pythonPathProp, new GUIContent("Path of Python Executable:"));
                 EditorGUILayout.LabelField(
                     "Ensure a valid path for your OS (Windows/macOS differ).",
                     EditorStyles.helpBox
@@ -181,9 +183,9 @@ namespace BOforUnity.Editor
             GUILayout.Box(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(3));
             EditorGUILayout.LabelField("Study Settings", EditorStyles.boldLabel);
 
-            if (string.IsNullOrEmpty(script.userId))      script.userId = "-1";
-            if (string.IsNullOrEmpty(script.conditionId)) script.conditionId = "-1";
-            if (string.IsNullOrEmpty(script.groupId))     script.groupId = "-1";
+            if (string.IsNullOrEmpty(userIdProp.stringValue)) userIdProp.stringValue = "-1";
+            if (string.IsNullOrEmpty(conditionIdProp.stringValue)) conditionIdProp.stringValue = "-1";
+            if (string.IsNullOrEmpty(groupIdProp.stringValue)) groupIdProp.stringValue = "-1";
 
             EditorGUILayout.PropertyField(userIdProp);
             EditorGUILayout.PropertyField(conditionIdProp);
@@ -299,7 +301,7 @@ namespace BOforUnity.Editor
 
             // Warm start & perfect rating belong to run control / termination
             EditorGUILayout.PropertyField(warmStartProp, new GUIContent("Warm Start",
-                "Skip sampling by loading initial data. Sets Sampling Iterations to 0."));
+                "Skip sampling by loading initial data. The saved sampling iteration setting is preserved."));
             EditorGUILayout.PropertyField(perfectRatingActiveProp, new GUIContent("Perfect Rating Active",
                 "Terminate early when perfect rating is reached."));
             if (perfectRatingActiveProp.boolValue)
@@ -319,8 +321,6 @@ namespace BOforUnity.Editor
                     "Provide only the file name. Avoid '_' and ',' in names.",
                     EditorStyles.helpBox
                 );
-                // Force sampling to zero when warm start is on
-                script.numSamplingIterations = 0;
             }
 
             if (warmStartObjectiveFormatProp != null)
@@ -343,24 +343,27 @@ namespace BOforUnity.Editor
                 }
             }
 
-            // Sampling iterations: default (2*d)+1 unless user explicitly enables manual edit
+            // Sampling iterations: default 2(d+1) unless user explicitly enables manual edit
             EditorGUILayout.Space();
             using (new EditorGUI.DisabledScope(warmStartProp.boolValue))
             {
                 EditorGUILayout.PropertyField(
                     enableSamplingEditProp,
                     new GUIContent("Set Sampling Iterations Manually",
-                        "Default is (2·d)+1. Enable to override.")
+                        "Default is 2·(d+1). Enable to override.")
                 );
 
-                int defaultSampling = (2 * parameterList.count) + 1;
+                int defaultSampling = BoForUnityManager.ComputeRecommendedSamplingIterations(parameterList.count);
 
                 // When manual edit is OFF, keep the default and lock the field.
-                if (!enableSamplingEditProp.boolValue)
+                if (!warmStartProp.boolValue && !enableSamplingEditProp.boolValue)
                 {
                     if (nSamplingIterProp.intValue != defaultSampling)
                         nSamplingIterProp.intValue = defaultSampling;
+                }
 
+                if (!enableSamplingEditProp.boolValue)
+                {
                     using (new EditorGUI.DisabledScope(true))
                     {
                         EditorGUILayout.IntField(new GUIContent("Sampling Iterations"), nSamplingIterProp.intValue);
@@ -373,7 +376,7 @@ namespace BOforUnity.Editor
                 }
 
                 EditorGUILayout.LabelField(
-                    "Recommended sampling iterations default: (2 · d) + 1, where d is the number of design parameters.",
+                    "Recommended sampling iterations default: 2 · (d + 1), where d is the number of design parameters.",
                     EditorStyles.helpBox
                 );
             }
@@ -381,13 +384,14 @@ namespace BOforUnity.Editor
             EditorGUILayout.PropertyField(nOptimizationIterProp, new GUIContent("Optimization Iterations"));
 
             // Total iterations = sampling (or 0 with warm start) + optimization
-            int sampling = warmStartProp.boolValue ? 0 : nSamplingIterProp.intValue;
-            int total    = sampling + nOptimizationIterProp.intValue;
+            int sampling = warmStartProp.boolValue ? 0 : Mathf.Max(0, nSamplingIterProp.intValue);
+            int optimization = Mathf.Max(0, nOptimizationIterProp.intValue);
+            int total = sampling + optimization;
             totalIterationsProp.intValue = total;
 
             EditorGUILayout.LabelField("Total Iterations", total.ToString(), EditorStyles.boldLabel);
             EditorGUILayout.LabelField(
-                "Total = Sampling Iterations + Optimization Iterations. Sampling must be ≥ 3 unless warm start is used.",
+                "Total = effective Sampling Iterations + Optimization Iterations. Warm start uses 0 sampling iterations without changing the saved sampling setting.",
                 EditorStyles.helpBox
             );
 
@@ -530,6 +534,9 @@ namespace BOforUnity.Editor
             SerializedProperty cabopGroup = value.FindPropertyRelative("cabopGroup");
             SerializedProperty cabopTolerance = value.FindPropertyRelative("cabopTolerance");
             SerializedProperty cabopPrefabricatedValues = value.FindPropertyRelative("cabopPrefabricatedValues");
+            bool showCabopFields = optimizerBackendProp != null &&
+                                   (BoForUnityManager.OptimizerBackend)optimizerBackendProp.enumValueIndex ==
+                                   BoForUnityManager.OptimizerBackend.CABOP;
 
             float padding = 1.5f;
             float singleLineHeight = EditorGUIUtility.singleLineHeight;
@@ -555,17 +562,20 @@ namespace BOforUnity.Editor
                 yOffset += fieldHeight;
                 EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), upperBound);
                 yOffset += fieldHeight;
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), cabopGroup);
-                yOffset += fieldHeight;
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), cabopTolerance);
-                yOffset += fieldHeight;
-                float prefabHeight = EditorGUI.GetPropertyHeight(cabopPrefabricatedValues, true);
-                EditorGUI.PropertyField(
-                    new Rect(rect.x, yOffset, rect.width, prefabHeight),
-                    cabopPrefabricatedValues,
-                    new GUIContent("CABOP Prefabricated Values"),
-                    true
-                );
+                if (showCabopFields)
+                {
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), cabopGroup);
+                    yOffset += fieldHeight;
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), cabopTolerance);
+                    yOffset += fieldHeight;
+                    float prefabHeight = EditorGUI.GetPropertyHeight(cabopPrefabricatedValues, true);
+                    EditorGUI.PropertyField(
+                        new Rect(rect.x, yOffset, rect.width, prefabHeight),
+                        cabopPrefabricatedValues,
+                        new GUIContent("CABOP Prefabricated Values"),
+                        true
+                    );
+                }
 
                 EditorGUI.indentLevel--;
             }
@@ -583,9 +593,16 @@ namespace BOforUnity.Editor
 
             if (value.isExpanded)
             {
-                SerializedProperty cabopPrefabricatedValues = value.FindPropertyRelative("cabopPrefabricatedValues");
-                totalHeight += singleLineHeight * 5 + 1.5f * 5;
-                totalHeight += EditorGUI.GetPropertyHeight(cabopPrefabricatedValues, true) + 1.5f;
+                totalHeight += singleLineHeight * 3 + 1.5f * 3;
+                bool showCabopFields = optimizerBackendProp != null &&
+                                       (BoForUnityManager.OptimizerBackend)optimizerBackendProp.enumValueIndex ==
+                                       BoForUnityManager.OptimizerBackend.CABOP;
+                if (showCabopFields)
+                {
+                    SerializedProperty cabopPrefabricatedValues = value.FindPropertyRelative("cabopPrefabricatedValues");
+                    totalHeight += singleLineHeight * 2 + 1.5f * 2;
+                    totalHeight += EditorGUI.GetPropertyHeight(cabopPrefabricatedValues, true) + 1.5f;
+                }
             }
 
             return totalHeight;
@@ -598,15 +615,67 @@ namespace BOforUnity.Editor
             SerializedProperty element = objectiveList.serializedProperty.GetArrayElementAtIndex(index);
             SerializedProperty key = element.FindPropertyRelative("key");
             SerializedProperty value = element.FindPropertyRelative("value");
+            SerializedProperty numberOfSubMeasures = value.FindPropertyRelative("numberOfSubMeasures");
+            SerializedProperty values = value.FindPropertyRelative("values");
+            SerializedProperty lowerBound = value.FindPropertyRelative("lowerBound");
+            SerializedProperty upperBound = value.FindPropertyRelative("upperBound");
+            SerializedProperty smallerIsBetter = value.FindPropertyRelative("smallerIsBetter");
+            SerializedProperty cabopWeight = value.FindPropertyRelative("cabopWeight");
+            bool showCabopFields = IsCabopBackendSelected();
 
             float padding = 5f;
+            float singleLineHeight = EditorGUIUtility.singleLineHeight;
+            float spacing = EditorGUIUtility.standardVerticalSpacing;
             rect.y += padding / 2;
+            float yOffset = rect.y;
 
-            EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight), key, GUIContent.none);
+            EditorGUI.PropertyField(new Rect(rect.x, yOffset, rect.width, singleLineHeight), key, GUIContent.none);
+            yOffset += singleLineHeight + spacing;
+
+            value.isExpanded = EditorGUI.Foldout(
+                new Rect(rect.x, yOffset, rect.width, singleLineHeight),
+                value.isExpanded,
+                "",
+                true
+            );
+            yOffset += singleLineHeight + spacing;
+
+            if (!value.isExpanded)
+                return;
+
             EditorGUI.indentLevel++;
-            EditorGUI.PropertyField(new Rect(rect.x, rect.y + EditorGUIUtility.singleLineHeight + 2, rect.width, EditorGUI.GetPropertyHeight(value)), value, GUIContent.none, true);
+            DrawObjectiveChildProperty(rect, ref yOffset, numberOfSubMeasures);
+            DrawObjectiveChildProperty(rect, ref yOffset, values, includeChildren: true);
+            DrawObjectiveChildProperty(rect, ref yOffset, lowerBound);
+            DrawObjectiveChildProperty(rect, ref yOffset, upperBound);
+            DrawObjectiveChildProperty(rect, ref yOffset, smallerIsBetter);
+            if (showCabopFields)
+            {
+                DrawObjectiveChildProperty(rect, ref yOffset, cabopWeight);
+            }
             EditorGUI.indentLevel--;
-            rect.y += padding;
+        }
+
+        private static void DrawObjectiveChildProperty(
+            Rect rect,
+            ref float yOffset,
+            SerializedProperty property,
+            bool includeChildren = false)
+        {
+            float propertyHeight = EditorGUI.GetPropertyHeight(property, includeChildren);
+            EditorGUI.PropertyField(
+                new Rect(rect.x, yOffset, rect.width, propertyHeight),
+                property,
+                includeChildren
+            );
+            yOffset += propertyHeight + EditorGUIUtility.standardVerticalSpacing;
+        }
+
+        private bool IsCabopBackendSelected()
+        {
+            return optimizerBackendProp != null &&
+                   (BoForUnityManager.OptimizerBackend)optimizerBackendProp.enumValueIndex ==
+                   BoForUnityManager.OptimizerBackend.CABOP;
         }
 
         private float GetParameterElementHeight(int index)
@@ -619,8 +688,34 @@ namespace BOforUnity.Editor
         private float GetObjectiveElementHeight(int index)
         {
             SerializedProperty element = objectiveList.serializedProperty.GetArrayElementAtIndex(index);
-            float padding = 5;
-            return EditorGUIUtility.singleLineHeight + EditorGUI.GetPropertyHeight(element.FindPropertyRelative("value")) + EditorGUIUtility.standardVerticalSpacing + 2 + padding;
+            SerializedProperty value = element.FindPropertyRelative("value");
+            float padding = 5f;
+            float spacing = EditorGUIUtility.standardVerticalSpacing;
+            float totalHeight = padding + (EditorGUIUtility.singleLineHeight + spacing) * 2;
+
+            if (value.isExpanded)
+            {
+                totalHeight += GetObjectiveChildPropertyHeight(value, "numberOfSubMeasures") + spacing;
+                totalHeight += GetObjectiveChildPropertyHeight(value, "values", includeChildren: true) + spacing;
+                totalHeight += GetObjectiveChildPropertyHeight(value, "lowerBound") + spacing;
+                totalHeight += GetObjectiveChildPropertyHeight(value, "upperBound") + spacing;
+                totalHeight += GetObjectiveChildPropertyHeight(value, "smallerIsBetter") + spacing;
+
+                if (IsCabopBackendSelected())
+                {
+                    totalHeight += GetObjectiveChildPropertyHeight(value, "cabopWeight") + spacing;
+                }
+            }
+
+            return totalHeight;
+        }
+
+        private static float GetObjectiveChildPropertyHeight(
+            SerializedProperty value,
+            string propertyName,
+            bool includeChildren = false)
+        {
+            return EditorGUI.GetPropertyHeight(value.FindPropertyRelative(propertyName), includeChildren);
         }
     }
 }

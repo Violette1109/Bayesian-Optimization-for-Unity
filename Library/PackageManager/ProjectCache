@@ -5,7 +5,7 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639089256440000000
+      ticks: 639128855190000000
     m_Hash: 2151318640
   m_LockFileStatus:
     m_FilePath: /Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages/packages-lock.json
@@ -13,7 +13,7 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639089256440000000
+      ticks: 639128855190000000
     m_Hash: 2430276336
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
@@ -92,9 +92,11 @@ m_ResolvedPackages:
     - 3.0.37
     - 3.0.38
     - 3.0.39
+    - 3.0.40
     compatible:
     - 3.0.39
-    recommended: 3.0.39
+    - 3.0.40
+    recommended: 3.0.40
     deprecated:
     - 3.0.37
   dependencies:
