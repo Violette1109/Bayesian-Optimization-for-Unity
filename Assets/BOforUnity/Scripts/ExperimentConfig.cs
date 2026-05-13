@@ -23,8 +23,7 @@ public class ExperimentConfig : MonoBehaviour
 
     private static int _likertMax = 5;
     private static int _samplingRounds = 10;
-    private static int _optimizationRounds = 5;
-    private static bool _warmStart = true;
+    private static bool _warmStart = false;
     private static bool _experimentStarted = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -32,8 +31,7 @@ public class ExperimentConfig : MonoBehaviour
     {
         _likertMax = 5;
         _samplingRounds = 10;
-        _optimizationRounds = 5;
-        _warmStart = true;
+        _warmStart = false;
         _experimentStarted = false;
     }
 
@@ -44,6 +42,10 @@ public class ExperimentConfig : MonoBehaviour
             configPanel.SetActive(true);
             boManager.welcomePanel.SetActive(false);
             boManager.nextButton.SetActive(false);
+
+            // 暂停 Python，等用户选完参数再启动
+            if (boManager.pythonStarter != null)
+                boManager.pythonStarter.enabled = false;
         }
         else
         {
@@ -59,22 +61,20 @@ public class ExperimentConfig : MonoBehaviour
         scale5Btn.onClick.AddListener(() => { SetScale(5); HighlightScale(scale5Btn); });
         scale20Btn.onClick.AddListener(() => { SetScale(20); HighlightScale(scale20Btn); });
         scale100Btn.onClick.AddListener(() => { SetScale(100); HighlightScale(scale100Btn); });
-        rounds10Btn.onClick.AddListener(() => { SetRounds(10, 5); HighlightRounds(rounds10Btn); });
-        rounds15Btn.onClick.AddListener(() => { SetRounds(15, 0); HighlightRounds(rounds15Btn); });
+        rounds10Btn.onClick.AddListener(() => { SetRounds(10); HighlightRounds(rounds10Btn); });
+        rounds15Btn.onClick.AddListener(() => { SetRounds(15); HighlightRounds(rounds15Btn); });
         warmStartToggle.onValueChanged.AddListener(val => _warmStart = val);
         startBtn.onClick.AddListener(OnStartClicked);
+
+        // 读取 Toggle 初始状态
+        _warmStart = warmStartToggle.isOn;
 
         HighlightScale(scale5Btn);
         HighlightRounds(rounds10Btn);
     }
 
     void SetScale(int val) { _likertMax = val; }
-
-    void SetRounds(int samplingVal, int optimizationVal)
-    {
-        _samplingRounds = samplingVal;
-        _optimizationRounds = optimizationVal;
-    }
+    void SetRounds(int samplingVal) { _samplingRounds = samplingVal; }
 
     void HighlightScale(Button selected)
     {
@@ -103,6 +103,11 @@ public class ExperimentConfig : MonoBehaviour
     {
         _experimentStarted = true;
         ApplyConfig();
+
+        // 设好参数后才启动 Python
+        if (boManager.pythonStarter != null)
+            boManager.pythonStarter.enabled = true;
+
         configPanel.SetActive(false);
         boManager.welcomePanel.SetActive(true);
         if (boManager.initialized)
@@ -111,45 +116,51 @@ public class ExperimentConfig : MonoBehaviour
 
     void ApplyConfig()
     {
-    // 重新找 slider
-    Slider s = null;
-    foreach (var slider in Resources.FindObjectsOfTypeAll<Slider>())
-    {
-        if (slider.gameObject.name == "slider 1-100")
+        UnityEngine.Debug.Log($"ApplyConfig: likertMax={_likertMax}, warmStart={_warmStart}, sampling={_samplingRounds}");
+
+        // 重新找 slider
+        Slider s = null;
+        foreach (var slider in Resources.FindObjectsOfTypeAll<Slider>())
         {
-            s = slider;
-            break;
+            if (slider.gameObject.name == "SliderBar")
+            {
+                s = slider;
+                break;
+            }
         }
-    }
 
-    if (s != null)
-    {
-        s.minValue = 1;
-        s.maxValue = _likertMax;
-        s.wholeNumbers = true;
-        s.value = (_likertMax + 1) / 2;
-    }
+        if (s != null)
+        {
+            s.minValue = 1;
+            s.maxValue = _likertMax;
+            s.wholeNumbers = true;
+            s.value = (_likertMax + 1) / 2;
+        }
 
-    if (boManager.objectives.Count > 0)
-    {
-        boManager.objectives[0].value.lowerBound = 1;
-        boManager.objectives[0].value.upperBound = _likertMax;
-    }
+        // 用名字找 mental_demand objective
+        foreach (var obj in boManager.objectives)
+        {
+            if (obj.key == "mental_demand")
+            {
+                obj.value.lowerBound = 1;
+                obj.value.upperBound = _likertMax;
+                break;
+            }
+        }
 
-    boManager.numOptimizationIterations = (_samplingRounds == 15) ? 0 : 5;
-    boManager.warmStart = _warmStart;
-    boManager.enableFinalDesignRound = true;
-
-    if (!_warmStart)
-    {
         boManager.numSamplingIterations = _samplingRounds;
-    }
+        boManager.numOptimizationIterations = (_samplingRounds == 15) ? 0 : 5;
+        boManager.warmStart = _warmStart;
+        boManager.enableFinalDesignRound = true;
 
-    // Warm Start CSV 路径
-    if (_warmStart)
-    {
-        boManager.initialParametersDataPath = "warmstart_params.csv";
-        boManager.initialObjectivesDataPath = "warmstart_objectives.csv";
-    }
+        boManager.totalIterations = _warmStart
+            ? boManager.numOptimizationIterations
+            : _samplingRounds + boManager.numOptimizationIterations;
+
+        if (_warmStart)
+        {
+            boManager.initialParametersDataPath = "warmstart_params.csv";
+            boManager.initialObjectivesDataPath = "warmstart_objectives.csv";
+        }
     }
 }

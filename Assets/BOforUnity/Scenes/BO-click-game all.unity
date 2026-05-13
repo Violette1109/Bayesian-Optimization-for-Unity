@@ -8884,8 +8884,8 @@ MonoBehaviour:
   optimizerStatePanel: {fileID: 3894126212826737877}
   optimizationRunning: 0
   optimizationFinished: 0
-  localPython: 0
-  pythonPath: 
+  localPython: 1
+  pythonPath: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
 --- !u!114 &8763246848366250168
 MonoBehaviour:
   m_ObjectHideFlags: 0
