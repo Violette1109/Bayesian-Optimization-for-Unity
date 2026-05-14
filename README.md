@@ -59,6 +59,7 @@ Several scientific publications have used **Bayesian Optimization for Unity**:
   * [2.2 Human-in-the-Loop Process](#22-human-in-the-loop-process)
   * [2.3 Questionnaires for User Feedback](#23-questionnaires-for-user-feedback)
   * [2.4 Results of Multi-Objective Bayesian Optimization](#24-results-of-multi-objective-bayesian-optimization-pareto-front)
+  * [2.5 Research Extensions: Experimental Variables & VLM](#25-research-extensions-experimental-variables--vlm)
 * [3. Installation](#3-installation)
 * [4. Integration Checklist](#4-integration-checklist-required)
 * [5. Quick Start](#5-quick-start-10-minutes)
@@ -182,6 +183,27 @@ MOBO uses surrogate models (e.g., Gaussian processes) to approximate objectives,
 In short, the optimizer maximizes $y$ by proposing parameter vectors expected to perform best next.
 
 MOBO is used in hyperparameter tuning, materials discovery, and engineering design where multiple objectives matter.
+
+### 2.5 Research Extensions: Experimental Variables & VLM Integration
+
+In this fork, we introduce several experimental variables to investigate how feedback granularity and sampling strategies affect the convergence of the Multi-Objective Bayesian Optimization (MOBO) process.
+
+#### 2.5.1 Scale Resolution Comparison
+We compare three levels of feedback granularity to observe their impact on the Gaussian Process (GP) surrogate model:
+- **Low Resolution (1-5):** Traditional Likert-scale feedback.
+- **Medium Resolution (1-20):** Balanced granularity for nuanced human perception.
+- **High Resolution (1-100):** Continuous-like feedback designed to provide precise gradient information for the optimizer.
+
+#### 2.5.2 Impact of Sampling vs. Optimization Rounds
+We evaluate the trade-off between pure exploration and model-driven exploitation within a fixed budget of 15 iterations:
+- **Baseline (Pure Exploration):** 15 Sampling Rounds (Sobol). This group serves as the control to observe the design space coverage without model intervention.
+- **Guided Optimization:** 10 Sampling Rounds + 5 Optimization Rounds. This group tests the system's ability to transition from random exploration to informed exploitation, observing if even a small optimization window (5 rounds) can outperform pure random sampling.
+
+#### 2.5.3 VLM-Informed Warm Start
+(Optional Extension) Integration of **Vision-Language Models (VLM)** to serve as a "prior filter." By utilizing AI-generated priors, we aim to reduce the initial sampling burden on human participants, effectively shifting the optimization curve forward.
+
+#### 2.5.4 UI Enhancements: Real-time Score Synchronization
+To support the high-resolution (1-100) experiment, we implemented a real-time synchronization script (`SliderValueDisplay.cs`). This provides participants with immediate numeric feedback as they adjust the slider, reducing the cognitive load required to provide precise ratings.
 
 ---
 
