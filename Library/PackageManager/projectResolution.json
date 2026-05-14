@@ -1,12 +1,12 @@
 {
   "context": {
     "projectPath": "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages",
-    "unityVersion": "6000.3.9f1"
+    "unityVersion": "6000.3.11f1"
   },
   "inputs": [
     "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages/manifest.json",
     "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages/packages-lock.json",
-    "/Applications/Unity/Hub/Editor/6000.3.9f1/Unity.app/Contents/Resources/PackageManager/BuiltInPackages/BuiltInPackagesCombined.sha1"
+    "/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/PackageManager/BuiltInPackages/BuiltInPackagesCombined.sha1"
   ],
   "outputs": {
     "com.unity.ide.rider@3.0.39": {
@@ -42,8 +42,8 @@
     "com.unity.ugui@2.0.0": {
       "name": "com.unity.ugui",
       "displayName": "uGUI",
-      "resolvedPath": "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ugui@bb329a87fcdc",
-      "fingerprint": "bb329a87fcdc5d55e815f3d804764d676674047e",
+      "resolvedPath": "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ugui@f17df9b1ab21",
+      "fingerprint": "f17df9b1ab21a9a2156e109eacf8dd2f65d03c8c",
       "editorCompatibility": "2019.2.0a1",
       "version": "2.0.0",
       "source": "builtin",
