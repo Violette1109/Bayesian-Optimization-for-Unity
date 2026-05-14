@@ -59,7 +59,7 @@ Several scientific publications have used **Bayesian Optimization for Unity**:
   * [2.2 Human-in-the-Loop Process](#22-human-in-the-loop-process)
   * [2.3 Questionnaires for User Feedback](#23-questionnaires-for-user-feedback)
   * [2.4 Results of Multi-Objective Bayesian Optimization](#24-results-of-multi-objective-bayesian-optimization-pareto-front)
-  * [2.5 Research Extensions: Experimental Variables & VLM](#25-research-extensions-experimental-variables--vlm)
+  * [2.5 Research Extensions: Experimental Variables & VLM](#research-extensions)
 * [3. Installation](#3-installation)
 * [4. Integration Checklist](#4-integration-checklist-required)
 * [5. Quick Start](#5-quick-start-10-minutes)
@@ -188,6 +188,7 @@ MOBO is used in hyperparameter tuning, materials discovery, and engineering desi
 
 In this fork, we introduce several experimental variables to investigate how feedback granularity and sampling strategies affect the convergence of the Multi-Objective Bayesian Optimization (MOBO) process.
 
+<a id="research-extensions"></a>
 #### 2.5.1 Scale Resolution Comparison
 We compare three levels of feedback granularity to observe their impact on the Gaussian Process (GP) surrogate model:
 - **Low Resolution (1-5):** Traditional Likert-scale feedback.
