@@ -293,7 +293,10 @@ namespace BOforUnity.Scripts
             Debug.Log("Optimizer script path: " + fullPath);
             Debug.Log("Optimizer script exists: " + File.Exists(fullPath));
 
-            outputFilePath = Path.Combine(Application.streamingAssetsPath, "BOData", "BayesianOptimization", "output.txt");
+            string studyDataRoot = GetApplicationPath();
+            string backendLogDir = Path.Combine(studyDataRoot, "BayesianOptimization");
+            Directory.CreateDirectory(backendLogDir);
+            outputFilePath = Path.Combine(backendLogDir, "output.txt");
             outputFileWriter = new StreamWriter(outputFilePath);
 
             // Start Python process only after pip finished
@@ -464,6 +467,16 @@ namespace BOforUnity.Scripts
             pythonProcess.StartInfo.RedirectStandardOutput = true;
             pythonProcess.StartInfo.RedirectStandardError = true;
             pythonProcess.EnableRaisingEvents = true;
+            if (_bomanager != null)
+            {
+                pythonProcess.StartInfo.Environment["BO_HOST"] =
+                    string.IsNullOrWhiteSpace(_bomanager.socketHost) ? "127.0.0.1" : _bomanager.socketHost.Trim();
+                pythonProcess.StartInfo.Environment["BO_PORT"] =
+                    Mathf.Clamp(_bomanager.socketPort, 1, 65535).ToString();
+                pythonProcess.StartInfo.Environment[BoForUnityManager.StudyDataRootEnvVar] = GetApplicationPath();
+                pythonProcess.StartInfo.Environment[BoForUnityManager.ParticipantHashSaltEnvVar] =
+                    string.IsNullOrWhiteSpace(_bomanager.participantHashSalt) ? "BOforUnity" : _bomanager.participantHashSalt.Trim();
+            }
 
             pythonProcess.OutputDataReceived += (sender, e) =>
             {
@@ -570,17 +583,27 @@ namespace BOforUnity.Scripts
         // Get the application path based on the current platform.
         private string GetApplicationPath()
         {
-            string applicationPath = "";
-#if UNITY_EDITOR
-            applicationPath = Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
-#elif UNITY_STANDALONE_WIN
-            applicationPath = Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
-#elif UNITY_STANDALONE_OSX
-            applicationPath = Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
-#else
-            applicationPath = Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
-#endif
-            return applicationPath;
+            string fallbackPath = Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
+            if (_bomanager == null)
+                return fallbackPath;
+
+            string resolved = _bomanager.ResolveStudyDataRoot();
+            if (string.IsNullOrWhiteSpace(resolved))
+                return fallbackPath;
+
+            try
+            {
+                Directory.CreateDirectory(resolved);
+                return resolved;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning(
+                    "Could not create configured study data root. Falling back to StreamingAssets path. " +
+                    $"Path='{resolved}', Error='{ex.Message}'"
+                );
+                return fallbackPath;
+            }
         }
 
         /// <summary>

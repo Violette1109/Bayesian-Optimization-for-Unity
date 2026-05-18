@@ -21,6 +21,7 @@ namespace BOforUnity.Scripts
     [Serializable] class InitMsg : MsgBase
     {
         public InitConfig config;
+        public SessionContextInfo sessionContext;
         public List<ParamInfo> parameters;
         public List<ObjInfo> objectives;
         public List<CabopGroupCostInfo> cabopGroupCosts;
@@ -31,11 +32,31 @@ namespace BOforUnity.Scripts
     {
         public int batchSize, numRestarts, rawSamples, numOptimizationIterations, mcSamples, numSamplingIterations, seed;
         public int nParameters, nObjectives;
+        public int socketPort;
         public bool warmStart;
-        public string initialParametersDataPath, initialObjectivesDataPath, warmStartObjectiveFormat;
+        public string initialParametersDataPath, initialObjectivesDataPath, warmStartObjectiveFormat, socketHost;
         public string optimizerBackend, cabopObjectiveMode, cabopUpdateRule;
         public bool cabopUseCostAwareAcquisition, cabopEnableCostBudget;
         public float cabopMaxCumulativeCost;
+    }
+
+    [Serializable]
+    class SessionContextInfo
+    {
+        public string schemaVersion;
+        public string appVersion;
+        public string sessionStartIsoUtc;
+        public string feedbackObjectiveKey;
+        public string feedbackSliderName;
+        public int feedbackScaleMax;
+        public bool warmStartEnabled;
+        public bool priorRatingHintEnabled;
+        public int samplingRounds;
+        public int optimizationRounds;
+        public string optimizerBackend;
+        public string optimizerMode;
+        public bool finalDesignRoundEnabled;
+        public string participantToken;
     }
 
     [Serializable] class ParamInit { public double low; public double high; }
@@ -75,7 +96,7 @@ namespace BOforUnity.Scripts
 
     [Serializable] class UserInfo
     {
-        public string userId, conditionId, groupId;
+        public string userId, conditionId, groupId, participantToken;
     }
 
     [Serializable] class ParametersMsg : MsgBase
@@ -126,8 +147,16 @@ namespace BOforUnity.Scripts
         public void InitSocket()
         {
             _bomanager = gameObject.GetComponent<BoForUnityManager>();
-            _ip = IPAddress.Parse("127.0.0.1");
-            _ipEnd = new IPEndPoint(_ip, 56001);
+            string host = string.IsNullOrWhiteSpace(_bomanager?.socketHost) ? "127.0.0.1" : _bomanager.socketHost.Trim();
+            int port = _bomanager != null ? Mathf.Clamp(_bomanager.socketPort, 1, 65535) : 56001;
+            if (!IPAddress.TryParse(host, out _ip))
+            {
+                IPAddress[] resolved = Dns.GetHostAddresses(host);
+                _ip = resolved.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork);
+                if (_ip == null)
+                    throw new InvalidOperationException($"Could not resolve IPv4 address for host '{host}'.");
+            }
+            _ipEnd = new IPEndPoint(_ip, port);
 
             _stopRequested = false;
             _connectionClosedByPeer = false;
@@ -645,6 +674,8 @@ namespace BOforUnity.Scripts
                     initialParametersDataPath = _bomanager.initialParametersDataPath,
                     initialObjectivesDataPath = _bomanager.initialObjectivesDataPath,
                     warmStartObjectiveFormat = NormalizeWarmStartObjectiveFormat(_bomanager.warmStartObjectiveFormat),
+                    socketHost = string.IsNullOrWhiteSpace(_bomanager.socketHost) ? "127.0.0.1" : _bomanager.socketHost.Trim(),
+                    socketPort = Mathf.Clamp(_bomanager.socketPort, 1, 65535),
                     optimizerBackend = NormalizeOptimizerBackend(_bomanager.optimizerBackend),
                     cabopObjectiveMode = NormalizeCabopObjectiveMode(_bomanager.cabopObjectiveMode),
                     cabopUseCostAwareAcquisition = _bomanager.cabopUseCostAwareAcquisition,
@@ -655,11 +686,33 @@ namespace BOforUnity.Scripts
                 parameters = parameterPayload,
                 objectives = objectivePayload,
                 cabopGroupCosts = BuildCabopGroupCosts(parameterGroups),
+                sessionContext = new SessionContextInfo
+                {
+                    schemaVersion = "2",
+                    appVersion = Application.version,
+                    sessionStartIsoUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                    feedbackObjectiveKey = string.IsNullOrWhiteSpace(_bomanager.sessionFeedbackObjectiveKey)
+                        ? "mental_demand"
+                        : _bomanager.sessionFeedbackObjectiveKey.Trim(),
+                    feedbackSliderName = string.IsNullOrWhiteSpace(_bomanager.sessionFeedbackSliderName)
+                        ? "SliderBar"
+                        : _bomanager.sessionFeedbackSliderName.Trim(),
+                    feedbackScaleMax = Mathf.Max(1, _bomanager.sessionFeedbackScaleMax),
+                    warmStartEnabled = _bomanager.warmStart,
+                    priorRatingHintEnabled = _bomanager.enablePriorSliderRatingHint,
+                    samplingRounds = _bomanager.GetEffectiveSamplingIterations(),
+                    optimizationRounds = Mathf.Max(0, _bomanager.numOptimizationIterations),
+                    optimizerBackend = NormalizeOptimizerBackend(_bomanager.optimizerBackend),
+                    optimizerMode = NormalizeCabopObjectiveMode(_bomanager.cabopObjectiveMode),
+                    finalDesignRoundEnabled = _bomanager.enableFinalDesignRound,
+                    participantToken = _bomanager.GetParticipantToken()
+                },
                 user = new UserInfo
                 {
-                    userId = _bomanager.userId,
+                    userId = _bomanager.GetLoggedUserId(),
                     conditionId = _bomanager.conditionId,
-                    groupId = _bomanager.groupId
+                    groupId = _bomanager.groupId,
+                    participantToken = _bomanager.GetParticipantToken()
                 }
             };
 

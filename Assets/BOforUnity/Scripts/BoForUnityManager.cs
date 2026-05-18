@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using BOforUnity.Scripts;
 using QuestionnaireToolkit.Scripts;
 using TMPro;
@@ -114,6 +116,21 @@ namespace BOforUnity
         public string conditionId = "-1";
         public string groupId = "-1";
 
+        [Header("Study Data & Privacy")]
+        public bool usePseudonymousParticipantLogging = true;
+        public string participantHashSalt = "BOforUnity";
+        public bool useExternalStudyDataRoot = true;
+        public string studyDataRootPath = string.Empty;
+
+        [Header("Socket Settings")]
+        public string socketHost = "127.0.0.1";
+        [Min(1)] public int socketPort = 56001;
+
+        [Header("Experiment Session Context")]
+        [Min(1)] public int sessionFeedbackScaleMax = 5;
+        public string sessionFeedbackObjectiveKey = "mental_demand";
+        public string sessionFeedbackSliderName = "SliderBar";
+
         public bool hasNewDesignParameterValues;
         private bool _pendingAdvanceRequest = false;
         private bool _loopTerminated = false;
@@ -125,6 +142,10 @@ namespace BOforUnity
         private string _finalDesignObservationCsvPath = null;
         private readonly Dictionary<string, float> _priorSliderRatingHints = new Dictionary<string, float>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _priorLinearScaleRatingHints = new Dictionary<string, string>(StringComparer.Ordinal);
+        private string _participantTokenCache = null;
+
+        public const string StudyDataRootEnvVar = "BO_STUDY_DATA_ROOT";
+        public const string ParticipantHashSaltEnvVar = "BO_PARTICIPANT_HASH_SALT";
         //-----------------------------------------------
         
         //-----------------------------------------------
@@ -163,6 +184,7 @@ namespace BOforUnity
         {
             SyncSamplingIterationDefaults();
             totalIterations = GetConfiguredTotalIterations();
+            _participantTokenCache = null;
         }
         
         void Start()
@@ -849,7 +871,7 @@ namespace BOforUnity
             {
                 if (FinalDesignSelector.TrySelectFromLatestObservationCsv(
                         logRootPath: logRoot,
-                        userId: userId,
+                        userId: GetLoggedUserId(),
                         conditionId: conditionId,
                         groupId: groupId,
                         parameters: effectiveParameters,
@@ -994,9 +1016,23 @@ namespace BOforUnity
                     row[idx] = value ?? string.Empty;
             }
 
-            SetColumn("UserID", userId);
+            SetColumn("UserID", GetLoggedUserId());
             SetColumn("ConditionID", conditionId);
             SetColumn("GroupID", groupId);
+            SetColumn("SchemaVersion", "2");
+            SetColumn("ParticipantToken", GetParticipantToken());
+            SetColumn("SessionTimestampUTC", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+            SetColumn("AppVersion", Application.version);
+            SetColumn("Backend", optimizerBackend == OptimizerBackend.CABOP ? "cabop" : "botorch");
+            SetColumn("BackendMode", cabopObjectiveMode == CabopObjectiveMode.MultiObjectiveScalarized ? "multi" : "single");
+            SetColumn("FeedbackObjectiveKey", sessionFeedbackObjectiveKey);
+            SetColumn("FeedbackSliderName", sessionFeedbackSliderName);
+            SetColumn("FeedbackScaleMax", sessionFeedbackScaleMax.ToString(CultureInfo.InvariantCulture));
+            SetColumn("WarmStartEnabled", warmStart ? "TRUE" : "FALSE");
+            SetColumn("PriorRatingHintEnabled", enablePriorSliderRatingHint ? "TRUE" : "FALSE");
+            SetColumn("SamplingRounds", GetEffectiveSamplingIterations().ToString(CultureInfo.InvariantCulture));
+            SetColumn("OptimizationRounds", Mathf.Max(0, numOptimizationIterations).ToString(CultureInfo.InvariantCulture));
+            SetColumn("FinalDesignRoundEnabled", enableFinalDesignRound ? "TRUE" : "FALSE");
             SetColumn("Timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             SetColumn("Iteration", currentIteration.ToString(CultureInfo.InvariantCulture));
             SetColumn("Phase", "finaldesign");
@@ -1158,6 +1194,12 @@ namespace BOforUnity
             return Math.Round(value, 3, MidpointRounding.AwayFromZero).ToString("0.###", CultureInfo.InvariantCulture);
         }
 
+        private static string NormalizeContextToken(string value, string defaultValue = "-1")
+        {
+            string token = string.IsNullOrWhiteSpace(value) ? defaultValue : value.Trim();
+            return string.IsNullOrEmpty(token) ? defaultValue : token;
+        }
+
         private static string EscapeCsvCell(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -1215,6 +1257,74 @@ namespace BOforUnity
             _priorLinearScaleRatingHints.Clear();
         }
 
+        public string GetLoggedUserId()
+        {
+            if (!usePseudonymousParticipantLogging)
+                return NormalizeContextToken(userId);
+
+            return GetParticipantToken();
+        }
+
+        public string GetParticipantToken()
+        {
+            if (!string.IsNullOrWhiteSpace(_participantTokenCache))
+                return _participantTokenCache;
+
+            string effectiveSalt = Environment.GetEnvironmentVariable(ParticipantHashSaltEnvVar);
+            if (string.IsNullOrWhiteSpace(effectiveSalt))
+                effectiveSalt = participantHashSalt;
+            if (string.IsNullOrWhiteSpace(effectiveSalt))
+                effectiveSalt = "BOforUnity";
+
+            string basis = string.Join("|",
+                NormalizeContextToken(userId),
+                NormalizeContextToken(conditionId),
+                NormalizeContextToken(groupId),
+                effectiveSalt.Trim());
+
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(basis);
+                byte[] hash = sha.ComputeHash(bytes);
+                string token = BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+                _participantTokenCache = "ptk_" + token.Substring(0, 16);
+            }
+
+            return _participantTokenCache;
+        }
+
+        public string ResolveStudyDataRoot()
+        {
+            string envRoot = Environment.GetEnvironmentVariable(StudyDataRootEnvVar);
+            if (!string.IsNullOrWhiteSpace(envRoot))
+                return Path.GetFullPath(envRoot);
+
+            if (useExternalStudyDataRoot)
+            {
+                if (!string.IsNullOrWhiteSpace(studyDataRootPath))
+                {
+                    if (Path.IsPathRooted(studyDataRootPath))
+                        return Path.GetFullPath(studyDataRootPath);
+
+                    string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                    return Path.GetFullPath(Path.Combine(projectRoot, studyDataRootPath));
+                }
+
+                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrWhiteSpace(localAppData))
+                    return Path.Combine(localAppData, "BOforUnityStudyData");
+            }
+
+            return Path.Combine(Application.dataPath, "StreamingAssets", "BOData");
+        }
+
+        public void SetExperimentSessionContext(int feedbackScaleMax, string feedbackObjectiveKey, string feedbackSliderName)
+        {
+            sessionFeedbackScaleMax = Mathf.Max(1, feedbackScaleMax);
+            sessionFeedbackObjectiveKey = string.IsNullOrWhiteSpace(feedbackObjectiveKey) ? "mental_demand" : feedbackObjectiveKey.Trim();
+            sessionFeedbackSliderName = string.IsNullOrWhiteSpace(feedbackSliderName) ? "SliderBar" : feedbackSliderName.Trim();
+        }
+
         public void SetPriorLinearScaleRatingHint(string questionKey, string answerValue)
         {
             if (string.IsNullOrWhiteSpace(questionKey) || string.IsNullOrWhiteSpace(answerValue))
@@ -1249,13 +1359,10 @@ namespace BOforUnity
 
         private string[] GetFinalDesignLogRootCandidates()
         {
+            string activeRoot = ResolveStudyDataRoot();
+
             // Current runtime location used by Python process working directory.
-            string current = Path.Combine(
-                Application.dataPath,
-                "StreamingAssets",
-                "BOData",
-                "LogData"
-            );
+            string current = Path.Combine(activeRoot, "LogData");
 
             // Legacy location from earlier versions / docs.
             string legacy = Path.Combine(
@@ -1268,18 +1375,14 @@ namespace BOforUnity
 
             // CABOP stores runs under dedicated subfolders to keep metrics/logs separate.
             string cabopSingle = Path.Combine(
-                Application.dataPath,
-                "StreamingAssets",
-                "BOData",
+                activeRoot,
                 "LogData",
                 "CABOP",
                 "single"
             );
 
             string cabopMulti = Path.Combine(
-                Application.dataPath,
-                "StreamingAssets",
-                "BOData",
+                activeRoot,
                 "LogData",
                 "CABOP",
                 "multi"

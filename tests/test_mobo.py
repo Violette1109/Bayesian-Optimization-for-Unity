@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 
-REPO_ROOT = pathlib.Path("/Users/pjansen/Desktop/Bayesian-Optimization-for-Unity")
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 MOBO_PATH = REPO_ROOT / "Assets/StreamingAssets/BOData/BayesianOptimization/mobo.py"
 
 
@@ -307,7 +307,23 @@ class MoboTests(unittest.TestCase):
                 {"key": "o0", "init": {"low": 0.0, "high": 10.0, "minimize": 1}},
                 {"key": "o1", "init": {"low": 0.0, "high": 10.0, "minimize": 0}},
             ],
-            "user": {"userId": "u", "conditionId": "c", "groupId": "g"},
+            "sessionContext": {
+                "schemaVersion": "2",
+                "appVersion": "test",
+                "sessionStartIsoUtc": "2026-01-01T00:00:00Z",
+                "feedbackObjectiveKey": "o0",
+                "feedbackSliderName": "SliderBar",
+                "feedbackScaleMax": 5,
+                "warmStartEnabled": False,
+                "priorRatingHintEnabled": False,
+                "samplingRounds": 2,
+                "optimizationRounds": 1,
+                "optimizerBackend": "botorch",
+                "optimizerMode": "multi",
+                "finalDesignRoundEnabled": True,
+                "participantToken": "ptk_testtoken0001",
+            },
+            "user": {"userId": "u", "conditionId": "c", "groupId": "g", "participantToken": "ptk_testtoken0001"},
         }
 
     def _run_main_with_init(self, mobo, init_msg, execute_stub=None, accept_error=None):

@@ -9,6 +9,7 @@ import socket
 import time
 import csv
 import os
+import hashlib
 import numpy as np
 import pandas as pd
 import torch
@@ -51,6 +52,12 @@ USER_ID = ""
 CONDITION_ID = ""
 GROUP_ID = ""
 USER_LOG_ID = ""
+PARTICIPANT_TOKEN = ""
+RAW_USER_ID = ""
+
+# observation/session schema
+OBSERVATION_SCHEMA_VERSION = "2"
+SESSION_CONTEXT = {}
 
 # names and meta parsed from init
 parameter_names = []
@@ -63,8 +70,8 @@ tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
 device = torch.device("cpu")
 
 # -------------------- TCP server helpers --------------------
-HOST = ''
-PORT = 56001
+HOST = os.environ.get("BO_HOST", "")
+PORT = int(os.environ.get("BO_PORT", "56001"))
 SOCKET_TIMEOUT_SEC = float(os.environ.get("BO_SOCKET_TIMEOUT_SEC", "3600"))
 SOCKET_ACCEPT_TIMEOUT_SEC = float(os.environ.get("BO_ACCEPT_TIMEOUT_SEC", "300"))
 SOCKET_MAX_RECV_BUF_BYTES = int(os.environ.get("BO_MAX_RECV_BUF_BYTES", "1048576"))
@@ -89,6 +96,42 @@ def normalize_log_folder_token(value, default="-1"):
     if cleaned in ("", ".", ".."):
         return default
     return cleaned
+
+
+def normalize_bool_token(value):
+    return "TRUE" if bool(value) else "FALSE"
+
+
+def derive_participant_token(raw_user_id, condition_id, group_id):
+    salt = os.environ.get("BO_PARTICIPANT_HASH_SALT", "BOforUnity")
+    basis = "|".join([
+        normalize_user_token(raw_user_id),
+        normalize_user_token(condition_id),
+        normalize_user_token(group_id),
+        normalize_user_token(salt, default="BOforUnity"),
+    ])
+    digest = hashlib.sha256(basis.encode("utf-8")).hexdigest()[:16]
+    return f"ptk_{digest}"
+
+
+def normalize_session_context(raw_context):
+    ctx = dict(raw_context or {})
+    return {
+        "schemaVersion": str(ctx.get("schemaVersion") or OBSERVATION_SCHEMA_VERSION),
+        "appVersion": str(ctx.get("appVersion") or "unknown"),
+        "sessionStartIsoUtc": str(ctx.get("sessionStartIsoUtc") or ""),
+        "feedbackObjectiveKey": str(ctx.get("feedbackObjectiveKey") or (objective_names[0] if objective_names else "")),
+        "feedbackSliderName": str(ctx.get("feedbackSliderName") or ""),
+        "feedbackScaleMax": int(ctx.get("feedbackScaleMax", 5)),
+        "warmStartEnabled": bool(ctx.get("warmStartEnabled", WARM_START)),
+        "priorRatingHintEnabled": bool(ctx.get("priorRatingHintEnabled", False)),
+        "samplingRounds": int(ctx.get("samplingRounds", N_INITIAL)),
+        "optimizationRounds": int(ctx.get("optimizationRounds", N_ITERATIONS)),
+        "optimizerBackend": str(ctx.get("optimizerBackend") or "botorch"),
+        "optimizerMode": str(ctx.get("optimizerMode") or "single"),
+        "finalDesignRoundEnabled": bool(ctx.get("finalDesignRoundEnabled", True)),
+        "participantToken": str(ctx.get("participantToken") or ""),
+    }
 
 def send_json_line(conn, obj):
     line = json.dumps(obj, ensure_ascii=False) + "\n"
@@ -267,7 +310,85 @@ def normalize_obj_column(col, lo, hi, minflag):
 
 
 def expected_observation_columns():
-    return ['UserID','ConditionID','GroupID','Timestamp','Iteration','Phase','IsBest'] + objective_names + parameter_names
+    return [
+        "SchemaVersion",
+        "ParticipantToken",
+        "UserID",
+        "ConditionID",
+        "GroupID",
+        "SessionTimestampUTC",
+        "AppVersion",
+        "Backend",
+        "BackendMode",
+        "FeedbackObjectiveKey",
+        "FeedbackSliderName",
+        "FeedbackScaleMax",
+        "WarmStartEnabled",
+        "PriorRatingHintEnabled",
+        "SamplingRounds",
+        "OptimizationRounds",
+        "FinalDesignRoundEnabled",
+        "Timestamp",
+        "Iteration",
+        "Phase",
+        "IsBest",
+    ] + objective_names + parameter_names
+
+
+def observation_context_defaults():
+    return {
+        "SchemaVersion": OBSERVATION_SCHEMA_VERSION,
+        "ParticipantToken": normalize_user_token(PARTICIPANT_TOKEN, default=derive_participant_token(RAW_USER_ID, CONDITION_ID, GROUP_ID)),
+        "UserID": normalize_user_token(USER_ID),
+        "ConditionID": normalize_user_token(CONDITION_ID),
+        "GroupID": normalize_user_token(GROUP_ID),
+        "SessionTimestampUTC": str(SESSION_CONTEXT.get("sessionStartIsoUtc", "")),
+        "AppVersion": str(SESSION_CONTEXT.get("appVersion", "unknown")),
+        "Backend": str(SESSION_CONTEXT.get("optimizerBackend", "botorch")),
+        "BackendMode": str(SESSION_CONTEXT.get("optimizerMode", "single")),
+        "FeedbackObjectiveKey": str(SESSION_CONTEXT.get("feedbackObjectiveKey", objective_names[0] if objective_names else "")),
+        "FeedbackSliderName": str(SESSION_CONTEXT.get("feedbackSliderName", "")),
+        "FeedbackScaleMax": int(SESSION_CONTEXT.get("feedbackScaleMax", 5)),
+        "WarmStartEnabled": normalize_bool_token(SESSION_CONTEXT.get("warmStartEnabled", WARM_START)),
+        "PriorRatingHintEnabled": normalize_bool_token(SESSION_CONTEXT.get("priorRatingHintEnabled", False)),
+        "SamplingRounds": int(SESSION_CONTEXT.get("samplingRounds", N_INITIAL)),
+        "OptimizationRounds": int(SESSION_CONTEXT.get("optimizationRounds", N_ITERATIONS)),
+        "FinalDesignRoundEnabled": normalize_bool_token(SESSION_CONTEXT.get("finalDesignRoundEnabled", True)),
+    }
+
+
+def load_or_initialize_observations_df(obs_csv):
+    expected_cols = expected_observation_columns()
+    if not os.path.exists(obs_csv):
+        return pd.DataFrame(columns=expected_cols)
+
+    df = pd.read_csv(obs_csv, delimiter=';')
+    legacy_required = ['UserID', 'ConditionID', 'GroupID', 'Timestamp', 'Iteration', 'Phase', 'IsBest'] + objective_names + parameter_names
+    missing_legacy = [c for c in legacy_required if c not in df.columns]
+    if missing_legacy:
+        raise ValueError(
+            f"ObservationsPerEvaluation.csv is missing required column(s): {missing_legacy}. "
+            f"Found columns: {list(df.columns)}"
+        )
+
+    context_defaults = observation_context_defaults()
+    for col in expected_cols:
+        if col in df.columns:
+            continue
+        if col in context_defaults:
+            df[col] = context_defaults[col]
+        else:
+            df[col] = ""
+
+    return df.reindex(columns=expected_cols)
+
+
+def append_observation_row(obs_csv, row_dict):
+    df = load_or_initialize_observations_df(obs_csv)
+    expected_cols = expected_observation_columns()
+    new_row = {k: row_dict.get(k, "") for k in expected_cols}
+    df = pd.concat([df, pd.DataFrame([new_row], columns=expected_cols)], ignore_index=True)
+    df.to_csv(obs_csv, sep=';', index=False)
 
 # -------------------- protocol parsing --------------------
 def parse_param_init(init_val):
@@ -367,11 +488,8 @@ def generate_initial_data(conn, n_samples):
         raise ValueError("n_samples must be >= 1 for non-warm-start runs.")
 
     obs_csv = os.path.join(PROJECT_PATH, "ObservationsPerEvaluation.csv")
-    if not os.path.exists(obs_csv):
-        # NOTE: 'IsBest' replaces 'IsPareto'
-        header = expected_observation_columns()
-        with open(obs_csv, 'w', newline='') as f:
-            csv.writer(f, delimiter=';').writerow(header)
+    context_defaults = observation_context_defaults()
+    _ = load_or_initialize_observations_df(obs_csv)
 
     train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
     print("Initial Sobol X in [0,1]:", train_x, flush=True)
@@ -394,11 +512,17 @@ def generate_initial_data(conn, n_samples):
         if is_best:
             best_so_far = float(y_np[0])
 
-        row = [USER_ID, CONDITION_ID, GROUP_ID,
-               time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-               i+1, 'sampling', 'TRUE' if is_best else 'FALSE', y_den, *x_den]
-        with open(obs_csv, 'a', newline='') as f:
-            csv.writer(f, delimiter=';').writerow(row)
+        row = dict(context_defaults)
+        row.update({
+            "Timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            "Iteration": i + 1,
+            "Phase": "sampling",
+            "IsBest": 'TRUE' if is_best else 'FALSE',
+            objective_names[0]: y_den,
+        })
+        for j, name in enumerate(parameter_names):
+            row[name] = x_den[j]
+        append_observation_row(obs_csv, row)
 
         send_json_line(conn, {"type": "tempCoverage", "value": float(i+1)/float(max(1,n_samples))})
 
@@ -407,7 +531,7 @@ def generate_initial_data(conn, n_samples):
         vals_norm = [float(t.item()) for t in train_obj]
         best_norm = max(vals_norm)
         flags = ['TRUE' if abs(v - best_norm) < 1e-12 else 'FALSE' for v in vals_norm]
-        df = pd.read_csv(obs_csv, delimiter=';')
+        df = load_or_initialize_observations_df(obs_csv)
         if len(df) >= len(flags):
             df.loc[df.index[:len(flags)], 'IsBest'] = flags
             df.to_csv(obs_csv, sep=';', index=False)
@@ -420,12 +544,21 @@ def load_data():
     if not CSV_PATH_PARAMETERS or not CSV_PATH_OBJECTIVES:
         raise ValueError("Warm start is enabled, but initial CSV paths are missing.")
 
-    x_path = os.path.join(cur, "InitData", CSV_PATH_PARAMETERS)
-    y_path = os.path.join(cur, "InitData", CSV_PATH_OBJECTIVES)
+    legacy_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    candidates_x = [
+        os.path.join(cur, "InitData", CSV_PATH_PARAMETERS),
+        os.path.join(legacy_root, "InitData", CSV_PATH_PARAMETERS),
+    ]
+    candidates_y = [
+        os.path.join(cur, "InitData", CSV_PATH_OBJECTIVES),
+        os.path.join(legacy_root, "InitData", CSV_PATH_OBJECTIVES),
+    ]
+    x_path = next((p for p in candidates_x if os.path.exists(p)), candidates_x[0])
+    y_path = next((p for p in candidates_y if os.path.exists(p)), candidates_y[0])
     if not os.path.exists(x_path):
-        raise FileNotFoundError(f"Warm-start parameter CSV not found: {x_path}")
+        raise FileNotFoundError(f"Warm-start parameter CSV not found. Tried: {candidates_x}")
     if not os.path.exists(y_path):
-        raise FileNotFoundError(f"Warm-start objective CSV not found: {y_path}")
+        raise FileNotFoundError(f"Warm-start objective CSV not found. Tried: {candidates_y}")
 
     x_df = pd.read_csv(x_path, delimiter=';')
     y_df = pd.read_csv(y_path, delimiter=';')
@@ -506,26 +639,19 @@ def save_xy(x_sample, y_sample, iteration):
         x_np[-1][j] = denormalize_to_original_param(x_np[-1][j], parameters_info[j][0], parameters_info[j][1])
     y_np[-1][0] = denormalize_to_original_obj(y_np[-1][0], objectives_info[0][0], objectives_info[0][1], objectives_info[0][2])
 
-    if os.path.exists(obs_csv):
-        df = pd.read_csv(obs_csv, delimiter=';')
-        expected_cols = expected_observation_columns()
-        if list(df.columns) != expected_cols:
-            raise ValueError(
-                f"ObservationsPerEvaluation.csv columns mismatch. "
-                f"Expected {expected_cols}, got {list(df.columns)}"
-            )
-    else:
-        cols = expected_observation_columns()
-        df = pd.DataFrame(columns=cols)
-
-    new_row = pd.DataFrame([[USER_ID, CONDITION_ID, GROUP_ID,
-                             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                             iteration_index, 'optimization', 'FALSE',
-                             y_np[-1][0], *x_np[-1]]], columns=df.columns)
-    if df.empty:
-        df = new_row.copy()
-    else:
-        df = pd.concat([df, new_row], ignore_index=True)
+    context_defaults = observation_context_defaults()
+    df = load_or_initialize_observations_df(obs_csv)
+    new_row = dict(context_defaults)
+    new_row.update({
+        "Timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        "Iteration": iteration_index,
+        "Phase": "optimization",
+        "IsBest": "FALSE",
+        objective_names[0]: y_np[-1][0],
+    })
+    for j, name in enumerate(parameter_names):
+        new_row[name] = x_np[-1][j]
+    df = pd.concat([df, pd.DataFrame([new_row], columns=df.columns)], ignore_index=True)
 
     # Update IsBest for the current run tail while preserving any older, unrelated rows.
     vals_norm = y_sample.squeeze(-1).detach().cpu().tolist()
@@ -619,7 +745,7 @@ def main():
     global N_INITIAL, N_ITERATIONS, BATCH_SIZE, NUM_RESTARTS, RAW_SAMPLES, MC_SAMPLES, SEED
     global PROBLEM_DIM, NUM_OBJS, problem_bounds
     global WARM_START, CSV_PATH_PARAMETERS, CSV_PATH_OBJECTIVES, WARM_START_OBJECTIVE_FORMAT
-    global USER_ID, CONDITION_ID, GROUP_ID, USER_LOG_ID
+    global USER_ID, CONDITION_ID, GROUP_ID, USER_LOG_ID, PARTICIPANT_TOKEN, RAW_USER_ID, SESSION_CONTEXT
     global parameter_names, objective_names, parameters_info, objectives_info
     global SOCKET_ACCEPT_TIMEOUT_SEC
     global SOCKET_RECV_BUF
@@ -700,16 +826,25 @@ def main():
             print(f"Warning: batchSize={BATCH_SIZE} is not supported in this HITL loop; forcing batchSize=1.", flush=True)
             BATCH_SIZE = 1
 
+        session_context_raw = init_msg.get("sessionContext")
+        if not isinstance(session_context_raw, dict):
+            raise ValueError("Init message must contain required 'sessionContext' object.")
+        SESSION_CONTEXT = normalize_session_context(session_context_raw)
+
         user = init_msg.get("user", {}) or {}
-        USER_ID      = normalize_user_token(user.get("userId"), default="-1")
+        RAW_USER_ID = normalize_user_token(user.get("userId"), default="-1")
         CONDITION_ID = normalize_user_token(user.get("conditionId"), default="-1")
         GROUP_ID     = normalize_user_token(user.get("groupId"), default="-1")
+        PARTICIPANT_TOKEN = normalize_user_token(
+            user.get("participantToken") or SESSION_CONTEXT.get("participantToken"),
+            default=""
+        )
+        if not PARTICIPANT_TOKEN:
+            PARTICIPANT_TOKEN = derive_participant_token(RAW_USER_ID, CONDITION_ID, GROUP_ID)
+        USER_ID = PARTICIPANT_TOKEN
         USER_LOG_ID  = normalize_log_folder_token(USER_ID, default="-1")
         if USER_LOG_ID != USER_ID:
-            print(
-                f"Warning: userId '{USER_ID}' was normalized to safe log-folder token '{USER_LOG_ID}'.",
-                flush=True,
-            )
+            print(f"Warning: participant token '{USER_ID}' normalized to safe log-folder token '{USER_LOG_ID}'.", flush=True)
 
         parameters = init_msg.get("parameters", []) or []
         objectives = init_msg.get("objectives", []) or []
@@ -754,7 +889,8 @@ def main():
         print("Init OK:", dict(
             BATCH_SIZE=BATCH_SIZE, NUM_RESTARTS=NUM_RESTARTS, RAW_SAMPLES=RAW_SAMPLES,
             N_ITERATIONS=N_ITERATIONS, MC_SAMPLES=MC_SAMPLES,
-            N_INITIAL=N_INITIAL, SEED=SEED, PROBLEM_DIM=PROBLEM_DIM, NUM_OBJS=NUM_OBJS
+            N_INITIAL=N_INITIAL, SEED=SEED, PROBLEM_DIM=PROBLEM_DIM, NUM_OBJS=NUM_OBJS,
+            HOST=HOST, PORT=PORT, OBSERVATION_SCHEMA_VERSION=OBSERVATION_SCHEMA_VERSION
         ), flush=True)
 
         bo_execute(conn, SEED, N_ITERATIONS, N_INITIAL)

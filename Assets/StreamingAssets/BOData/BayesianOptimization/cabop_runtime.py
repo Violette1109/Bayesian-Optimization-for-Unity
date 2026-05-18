@@ -51,8 +51,8 @@ METRICS_LOG_PATH = ""
 COMPAT_METRIC_LOG_PATH = ""
 
 # -------------------- TCP server helpers --------------------
-HOST = ""
-PORT = 56001
+HOST = os.environ.get("BO_HOST", "")
+PORT = int(os.environ.get("BO_PORT", "56001"))
 SOCKET_TIMEOUT_SEC = float(os.environ.get("BO_SOCKET_TIMEOUT_SEC", "3600"))
 SOCKET_ACCEPT_TIMEOUT_SEC = float(os.environ.get("BO_ACCEPT_TIMEOUT_SEC", "300"))
 SOCKET_MAX_RECV_BUF_BYTES = int(os.environ.get("BO_MAX_RECV_BUF_BYTES", "1048576"))
