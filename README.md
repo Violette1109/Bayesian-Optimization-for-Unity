@@ -103,7 +103,7 @@ Several scientific publications have used **Bayesian Optimization for Unity**:
 | **Hypervolume** | Single MOBO progress metric computed from current non-dominated points in maximize-space. |
 | **coverage** | Runtime metric sent from Python to Unity (`hypervolume` for MOBO, best objective for BO). |
 | **tempCoverage** | Sampling-progress value in `[0,1]` during initial sampling rounds. |
-| **USER_LOG_ID** | Folder-safe log identifier derived from `User ID` (invalid path characters are normalized). |
+| **USER_LOG_ID** | Folder-safe log identifier derived from pseudonymous `ParticipantToken` (default) or `User ID` when pseudonymization is disabled. |
 | **Seed** | Number used to make stochastic parts reproducible across runs with the same setup. |
 
 
@@ -164,8 +164,8 @@ This asset uses the [QuestionnaireToolkit](https://assetstore.unity.com/packages
 
 - Only questionnaire question-item outputs are considered for BO objective updates (via objective-key/header matching).
 - `additionalCsvItems` are written only to the questionnaire results CSV and are **not** forwarded to the BO manager/backend.
-- `User ID`, `Condition ID`, and `Group ID` are not BO objectives. They are logged as context columns in `ObservationsPerEvaluation.csv`.
-- Final-design selection uses the full context triad (`User ID`, `Condition ID`, `Group ID`) when filtering candidate observation rows.
+- `User ID`, `Condition ID`, and `Group ID` are not BO objectives. Runtime logs store a pseudonymous participant token by default (raw IDs stay in-memory).
+- Final-design selection uses the full context triad (`UserID` token, `Condition ID`, `Group ID`) when filtering candidate observation rows.
 
 
 ### 2.4 Results of Multi-Objective Bayesian Optimization (Pareto Front)
@@ -277,7 +277,7 @@ Use this path for a first successful run with the provided demo scene.
 
 Expected successful outcome:
 - Parameter values in the scene change between iterations.
-- `Assets/StreamingAssets/BOData/LogData/<USER_LOG_ID>/` is created.
+- `<StudyDataRoot>/LogData/<USER_LOG_ID>/` is created (`StudyDataRoot` defaults to an external OS data directory; legacy `Assets/StreamingAssets/BOData` is still supported).
 - `ObservationsPerEvaluation.csv` and `ExecutionTimes.csv` are populated.
 - For MOBO (`m >= 2`), `HypervolumePerEvaluation.csv` is written and Unity receives `coverage` updates.
 
@@ -289,7 +289,7 @@ If these outputs appear, your full Unity-Python loop is working.
 ## 6. Example Usage
 
 This section walks through the provided example workflows. Install the asset first as described in [Installation](#3-installation).
-> **Note:** *ObservationsPerEvaluation.csv* must be empty (except for the header). Find it at *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/*. By default this equals `User ID`, but invalid path characters are normalized for folder safety. You can delete the folder to recreate a clean one.
+> **Note:** *ObservationsPerEvaluation.csv* must be empty (except for the header). Find it at *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/*. By default `USER_LOG_ID` is derived from pseudonymous `ParticipantToken`. You can delete the folder to recreate a clean one.
 
 ### 6.1 Questionnaire Demo Scene
 
@@ -303,7 +303,7 @@ Use this scene when you want to see the standard QuestionnaireToolkit-based HITL
 6. Answer, then press `Finish`. The optimizer saves your input and updates parameters.
 7. Press `Next` to start a new iteration. Repeat from step `3` until all iterations finish. The system then indicates you can close the application.
 
-> **Note:** Results are in *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/* (typically your `User ID`, normalized for folder-safe naming if needed).
+> **Note:** Results are in *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/*.
 
 ### 6.2 Fitts Law Task Scene
 
@@ -369,7 +369,7 @@ Click `+` at the bottom of the parameter list to add a prefilled entry, then edi
 
 > **Note:** Ensure the new parameter is used by your simulation.
 
-> **Note:** If headers are out of sync, back up logs in *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/* and then delete the folder to refresh headers.
+> **Note:** If headers are out of sync, back up logs in *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/* and then delete the folder to refresh headers.
 
 > **Note:** If you use the [warm start option](#8101-warm-start-settings), ensure CSV headers match after adding parameters.
 
@@ -394,7 +394,7 @@ Select the parameter by clicking the `=` icon in its top-left corner (it turns b
 
 > **Note:** Ensure the removed parameter is **not** used in your simulation.
 
-> **Note:** If headers are out of sync, back up and remove the log folder *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/*.
+> **Note:** If headers are out of sync, back up and remove the log folder *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/*.
 
 
 ### 8.2 Objectives
@@ -407,7 +407,7 @@ Click `+` at the bottom of the objective list to add a prefilled entry, then edi
 
 > **Note:** Each objective must receive a value before optimization. In the demo, create a new questionnaire item or map an existing one to the objective (see below).
 
-> **Note:** If headers are out of sync, back up logs in *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/* and then delete the folder.
+> **Note:** If headers are out of sync, back up logs in *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/* and then delete the folder.
 
 > **Note:** For [warm start](#8101-warm-start-settings), CSV headers must match after adding objectives.
 
@@ -524,9 +524,38 @@ You can **override** this behavior by checking `Manually Installed Python` and f
 
 Set `User ID`, `Condition ID`, and `Group ID` in the inspector section shown in the [image](#py_st_ws_pr_settings).
 If your study does not use any of these IDs, leave the field at -1. The value will still be logged, but you can ignore it in analysis.
-These three values are always logged as context columns in `ObservationsPerEvaluation.csv` and are used together for final-design row filtering.
+`User ID` is pseudonymized into a stable `ParticipantToken` by default before writing logs/folders. `Condition ID` and `Group ID` are logged as-is.
+`ObservationsPerEvaluation.csv` now also stores session context columns per row (schema version, app version, feedback scale/objective, warm-start state, hint state, round counts, backend/mode, final-design-round flag, session timestamp).
 
 ![Study Settings](./images/study_settings.png)
+
+### 8.6.1 Data Root and Socket Overrides
+
+`BoForUnityManager` now supports:
+
+* **External Study Data Root** (`useExternalStudyDataRoot`, `studyDataRootPath`)  
+  Default output root is outside `Assets` (OS local app data).  
+  Override with env var: `BO_STUDY_DATA_ROOT`.
+* **Configurable socket endpoint** (`socketHost`, `socketPort`)  
+  Passed to Python at launch using `BO_HOST` / `BO_PORT`.
+
+### 8.6.2 Data-Driven Experiment Runtime Config
+
+`ExperimentConfig` now uses a `ExperimentRuntimeConfig` ScriptableObject:
+
+* scale options and default selection
+* round presets (sampling + optimization) and default selection
+* feedback objective key and target slider name
+
+Startup validation fails fast when runtime config, objective key, slider binding, or button counts are invalid.
+
+### 8.6.3 Warm-Start Helper Script
+
+The ad-hoc warm-start generator was moved to:
+
+* `tools/research/generate_warmstart.py`
+
+Use CLI flags (`--likert-max`, `--rows`, `--model`, `--ollama-url`, `--output-dir`, etc.) instead of editing hard-coded paths.
 
 ### 8.7 Optimizer Backend and CABOP Settings
 
@@ -781,10 +810,10 @@ The hyperparameters affect how efficiently the optimizer searches the space. The
 ### 8.12 Output Files and Metrics
 
 All result files are written to:
-* *Assets/StreamingAssets/BOData/LogData/&lt;USER_LOG_ID&gt;/*
-* *Assets/StreamingAssets/BOData/LogData/CABOP/single/&lt;USER_LOG_ID&gt;/* (CABOP single-objective runs)
-* *Assets/StreamingAssets/BOData/LogData/CABOP/multi/&lt;USER_LOG_ID&gt;/* (CABOP multi-objective-scalarized runs)
-* Legacy runs may exist under *Assets/StreamingAssets/BOData/BayesianOptimization/LogData/&lt;USER_LOG_ID&gt;/*; final-design selection checks both locations.
+* *&lt;StudyDataRoot&gt;/LogData/&lt;USER_LOG_ID&gt;/*
+* *&lt;StudyDataRoot&gt;/LogData/CABOP/single/&lt;USER_LOG_ID&gt;/* (CABOP single-objective runs)
+* *&lt;StudyDataRoot&gt;/LogData/CABOP/multi/&lt;USER_LOG_ID&gt;/* (CABOP multi-objective-scalarized runs)
+* Legacy runs may exist under *Assets/StreamingAssets/BOData/LogData/* and *Assets/StreamingAssets/BOData/BayesianOptimization/LogData/*; final-design selection checks both locations.
 
 Common files:
 * `ObservationsPerEvaluation.csv`: denormalized parameter/objective observations per evaluation.
@@ -808,6 +837,14 @@ CABOP (`cabop_bo.py` / `cabop_mobo.py`):
 * `CABOPMetricsPerEvaluation.csv` stores scalarized objective trace and realized/cumulative cost.
 * Compatibility metric file:
   * single mode: `BestObjectivePerEvaluation.csv`
+
+### 8.13 Continuous Integration
+
+GitHub Actions workflow: `.github/workflows/ci.yml`
+
+* Runs Python unit tests (`tests/test_bo.py`, `tests/test_mobo.py`).
+* Runs Unity EditMode/PlayMode validation when `UNITY_LICENSE` is available.
+* Uploads Python and Unity test artifacts for debugging failures.
   * multi mode: `HypervolumePerEvaluation.csv` (stores CABOP coverage trace for compatibility)
 * Unity `coverage` is `1 - best_scalarized_objective` (higher is better).
 
@@ -825,7 +862,7 @@ During sampling, Unity `tempCoverage` is a progress value in `[0,1]`.
 | Loop does not progress in `ExternalSignal` mode | `RequestNextIteration()` is not called from your custom flow | Add the explicit call after your evaluation step ends. |
 | Loop does not progress in `NextButton` mode | `Next Button` not assigned or not wired to `ButtonNextIteration()` | Assign the button reference and Unity `OnClick` event to `BoForUnityManager.ButtonNextIteration()`. |
 | Warm start fails on startup | Missing CSV files, wrong headers, non-numeric values, or wrong format setting | Validate files against [Warm-Start CSV Checklist (Required)](#8102-warm-start-csv-checklist-required) and [Warm-Start CSV Examples](#8103-warm-start-csv-examples). |
-| `ObservationsPerEvaluation.csv columns mismatch` error | Existing log file schema no longer matches current parameters/objectives | Back up and remove `Assets/StreamingAssets/BOData/LogData/<USER_LOG_ID>/`, then rerun to regenerate headers. |
+| `ObservationsPerEvaluation.csv columns mismatch` error | Existing log file schema no longer matches current parameters/objectives | Back up and remove `<StudyDataRoot>/LogData/<USER_LOG_ID>/`, then rerun to regenerate headers. |
 | No parameter changes between iterations | Simulation does not apply incoming parameter values from `bo.parameters` | Confirm your scene reads and applies updated parameter values each iteration. |
 | `coverage`/Pareto behavior seems inconsistent with minimize objectives | Misunderstanding of internal maximize-space conversion | See [Objective Direction Semantics](#8104-objective-direction-semantics) and [Objective Direction Example (2 Minimize, 1 Maximize)](#8105-objective-direction-example-2-minimize-1-maximize). |
 
