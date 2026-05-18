@@ -124,7 +124,7 @@ def normalize_session_context(raw_context):
         "samplingRounds": int(ctx.get("samplingRounds", N_INITIAL)),
         "optimizationRounds": int(ctx.get("optimizationRounds", N_ITERATIONS)),
         "optimizerBackend": str(ctx.get("optimizerBackend") or "botorch"),
-        "optimizerMode": str(ctx.get("optimizerMode") or "multi"),
+        "optimizerMode": str(ctx.get("backendMode") or ctx.get("optimizerMode") or "multi"),
         "finalDesignRoundEnabled": bool(ctx.get("finalDesignRoundEnabled", True)),
         "participantToken": str(ctx.get("participantToken") or ""),
     }

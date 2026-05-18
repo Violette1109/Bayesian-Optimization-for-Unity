@@ -37,17 +37,31 @@ jobs:
           path: python-test.log
 
   unity-validation:
-    if: secrets.UNITY_LICENSE != ''
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         testMode: [editmode, playmode]
     steps:
+      - name: Check Unity license availability
+        id: unity_license
+        run: |
+          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Unity validation skipped (missing UNITY_LICENSE)
+        if: steps.unity_license.outputs.available != 'true'
+        run: echo "UNITY_LICENSE is not configured; skipping Unity validation job."
+
       - name: Checkout
+        if: steps.unity_license.outputs.available == 'true'
         uses: actions/checkout@v4
 
       - name: Run Unity tests (${{ matrix.testMode }})
+        if: steps.unity_license.outputs.available == 'true'
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -57,7 +71,7 @@ jobs:
           artifactsPath: unity-test-results-${{ matrix.testMode }}
 
       - name: Upload Unity test artifacts (${{ matrix.testMode }})
-        if: always()
+        if: always() && steps.unity_license.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unity-test-results-${{ matrix.testMode }}

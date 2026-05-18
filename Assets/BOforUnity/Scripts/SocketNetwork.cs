@@ -55,6 +55,7 @@ namespace BOforUnity.Scripts
         public int optimizationRounds;
         public string optimizerBackend;
         public string optimizerMode;
+        public string backendMode;
         public bool finalDesignRoundEnabled;
         public string participantToken;
     }
@@ -704,7 +705,8 @@ namespace BOforUnity.Scripts
                     samplingRounds = _bomanager.GetEffectiveSamplingIterations(),
                     optimizationRounds = Mathf.Max(0, _bomanager.numOptimizationIterations),
                     optimizerBackend = NormalizeOptimizerBackend(_bomanager.optimizerBackend),
-                    optimizerMode = NormalizeCabopObjectiveMode(_bomanager.cabopObjectiveMode),
+                    optimizerMode = ResolveBackendMode(_bomanager.optimizerBackend, _bomanager.cabopObjectiveMode, objectivePayload.Count),
+                    backendMode = ResolveBackendMode(_bomanager.optimizerBackend, _bomanager.cabopObjectiveMode, objectivePayload.Count),
                     finalDesignRoundEnabled = _bomanager.enableFinalDesignRound,
                     participantToken = _bomanager.GetParticipantToken()
                 },
@@ -755,6 +757,16 @@ namespace BOforUnity.Scripts
                 default:
                     return "single";
             }
+        }
+
+        private static string ResolveBackendMode(
+            BOforUnity.BoForUnityManager.OptimizerBackend backend,
+            BOforUnity.BoForUnityManager.CabopObjectiveMode cabopMode,
+            int objectiveCount)
+        {
+            if (backend == BOforUnity.BoForUnityManager.OptimizerBackend.CABOP)
+                return NormalizeCabopObjectiveMode(cabopMode);
+            return objectiveCount > 1 ? "multi" : "single";
         }
 
         private static string NormalizeCabopUpdateRule(BOforUnity.BoForUnityManager.CabopUpdateRule updateRule)
