@@ -154,7 +154,8 @@ namespace BOforUnity.Scripts
                 IPAddress[] resolved = Dns.GetHostAddresses(host);
                 _ip = resolved.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork);
                 if (_ip == null)
-                    throw new InvalidOperationException($"Could not resolve IPv4 address for host '{host}'.");
+                    throw new InvalidOperationException(
+                        $"Could not resolve an IPv4 address for host '{host}'. Found {resolved.Length} address(es) but none were IPv4.");
             }
             _ipEnd = new IPEndPoint(_ip, port);
 
