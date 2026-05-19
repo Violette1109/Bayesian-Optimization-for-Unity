@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using BOforUnity;
+using TMPro;
 
 public class ExperimentConfig : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class ExperimentConfig : MonoBehaviour
     public Button rounds10Btn;
     public Button rounds15Btn;
     public Toggle warmStartToggle;
+    public Toggle randomAllocationToggle;
     public Button startBtn;
 
     [Header("References")]
@@ -24,7 +26,11 @@ public class ExperimentConfig : MonoBehaviour
     private static int _likertMax = 5;
     private static int _samplingRounds = 10;
     private static bool _warmStart = false;
+    private static bool _randomAllocation = false;
     private static bool _experimentStarted = false;
+    private const int RandomAllocationSamplingRounds = 15;
+    private const int GuidedOptimizationRounds = 5;
+    private const float GeneratedToggleYOffset = -80f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
@@ -32,11 +38,14 @@ public class ExperimentConfig : MonoBehaviour
         _likertMax = 5;
         _samplingRounds = 10;
         _warmStart = false;
+        _randomAllocation = false;
         _experimentStarted = false;
     }
 
     void Awake()
     {
+        EnsureRandomAllocationToggle();
+
         if (!_experimentStarted)
         {
             configPanel.SetActive(true);
@@ -64,13 +73,18 @@ public class ExperimentConfig : MonoBehaviour
         rounds10Btn.onClick.AddListener(() => { SetRounds(10); HighlightRounds(rounds10Btn); });
         rounds15Btn.onClick.AddListener(() => { SetRounds(15); HighlightRounds(rounds15Btn); });
         warmStartToggle.onValueChanged.AddListener(val => _warmStart = val);
+        if (randomAllocationToggle != null)
+            randomAllocationToggle.onValueChanged.AddListener(OnRandomAllocationChanged);
         startBtn.onClick.AddListener(OnStartClicked);
 
         // 读取 Toggle 初始状态
         _warmStart = warmStartToggle.isOn;
+        if (randomAllocationToggle != null)
+            randomAllocationToggle.isOn = _randomAllocation;
 
         HighlightScale(scale5Btn);
-        HighlightRounds(rounds10Btn);
+        HighlightRounds(_samplingRounds == RandomAllocationSamplingRounds ? rounds15Btn : rounds10Btn);
+        UpdateRandomAllocationUiState();
     }
 
     void SetScale(int val) { _likertMax = val; }
@@ -116,7 +130,16 @@ public class ExperimentConfig : MonoBehaviour
 
     void ApplyConfig()
     {
-        UnityEngine.Debug.Log($"ApplyConfig: likertMax={_likertMax}, warmStart={_warmStart}, sampling={_samplingRounds}");
+        int effectiveSamplingRounds = _randomAllocation ? RandomAllocationSamplingRounds : _samplingRounds;
+        int effectiveOptimizationRounds = _randomAllocation
+            ? 0
+            : (effectiveSamplingRounds == RandomAllocationSamplingRounds ? 0 : GuidedOptimizationRounds);
+        bool effectiveWarmStart = _randomAllocation ? false : _warmStart;
+        bool enableFinalDesignRound = !_randomAllocation;
+
+        UnityEngine.Debug.Log(
+            $"ApplyConfig: likertMax={_likertMax}, warmStart={effectiveWarmStart}, " +
+            $"sampling={effectiveSamplingRounds}, randomAllocation={_randomAllocation}");
 
         // 重新找 slider
         Slider s = null;
@@ -148,19 +171,86 @@ public class ExperimentConfig : MonoBehaviour
             }
         }
 
-        boManager.numSamplingIterations = _samplingRounds;
-        boManager.numOptimizationIterations = (_samplingRounds == 15) ? 0 : 5;
-        boManager.warmStart = _warmStart;
-        boManager.enableFinalDesignRound = true;
+        boManager.numSamplingIterations = effectiveSamplingRounds;
+        boManager.numOptimizationIterations = effectiveOptimizationRounds;
+        boManager.warmStart = effectiveWarmStart;
+        boManager.enableFinalDesignRound = enableFinalDesignRound;
 
-        boManager.totalIterations = _warmStart
+        boManager.totalIterations = effectiveWarmStart
             ? boManager.numOptimizationIterations
-            : _samplingRounds + boManager.numOptimizationIterations;
+            : effectiveSamplingRounds + boManager.numOptimizationIterations;
 
-        if (_warmStart)
+        if (effectiveWarmStart)
         {
             boManager.initialParametersDataPath = "warmstart_params.csv";
             boManager.initialObjectivesDataPath = "warmstart_objectives.csv";
         }
+    }
+
+    void OnRandomAllocationChanged(bool isOn)
+    {
+        _randomAllocation = isOn;
+        if (_randomAllocation)
+        {
+            _samplingRounds = RandomAllocationSamplingRounds;
+            HighlightRounds(rounds15Btn);
+        }
+
+        UpdateRandomAllocationUiState();
+    }
+
+    void UpdateRandomAllocationUiState()
+    {
+        bool enableManualRoundSelection = !_randomAllocation;
+        if (rounds10Btn != null)
+            rounds10Btn.interactable = enableManualRoundSelection;
+        if (rounds15Btn != null)
+            rounds15Btn.interactable = enableManualRoundSelection;
+
+        if (warmStartToggle != null)
+        {
+            warmStartToggle.interactable = !_randomAllocation;
+            if (_randomAllocation && warmStartToggle.isOn)
+                warmStartToggle.isOn = false;
+        }
+    }
+
+    void EnsureRandomAllocationToggle()
+    {
+        if (randomAllocationToggle != null || warmStartToggle == null)
+            return;
+
+        TextMeshProUGUI warmStartLabel = FindWarmStartLabel();
+        if (warmStartLabel == null)
+            return;
+
+        randomAllocationToggle = Instantiate(warmStartToggle, warmStartToggle.transform.parent);
+        randomAllocationToggle.gameObject.name = "Random Allocation Toggle";
+        randomAllocationToggle.onValueChanged = new Toggle.ToggleEvent();
+        randomAllocationToggle.isOn = _randomAllocation;
+
+        RectTransform warmToggleRect = warmStartToggle.GetComponent<RectTransform>();
+        RectTransform randomToggleRect = randomAllocationToggle.GetComponent<RectTransform>();
+        randomToggleRect.anchoredPosition = warmToggleRect.anchoredPosition + new Vector2(0f, GeneratedToggleYOffset);
+
+        TextMeshProUGUI randomLabel = Instantiate(warmStartLabel, warmStartLabel.transform.parent);
+        randomLabel.gameObject.name = "Random Allocation Label";
+        randomLabel.text = "Random Allocation";
+        randomLabel.rectTransform.anchoredPosition =
+            warmStartLabel.rectTransform.anchoredPosition + new Vector2(0f, GeneratedToggleYOffset);
+    }
+
+    TextMeshProUGUI FindWarmStartLabel()
+    {
+        if (warmStartToggle == null || warmStartToggle.transform.parent == null)
+            return null;
+
+        foreach (TextMeshProUGUI text in warmStartToggle.transform.parent.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            if (text != null && text.text == "Warm Start")
+                return text;
+        }
+
+        return null;
     }
 }
