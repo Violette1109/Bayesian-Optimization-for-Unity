@@ -25,19 +25,21 @@ public class ExperimentConfig : MonoBehaviour
 
     private static int _likertMax = 5;
     private static int _samplingRounds = 10;
+    private static int _manualSamplingRounds = 10;
     private static bool _warmStart = false;
     private static bool _randomAllocation = false;
     private static bool _experimentStarted = false;
     private const int RandomAllocationSamplingRounds = 15;
     private const int GuidedOptimizationRounds = 5;
     private const float GeneratedToggleYOffset = -80f;
-    private const float WarmStartLabelYAxisPriority = 1000f;
+    private const float LabelYAxisPriority = 1000f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
     {
         _likertMax = 5;
         _samplingRounds = 10;
+        _manualSamplingRounds = 10;
         _warmStart = false;
         _randomAllocation = false;
         _experimentStarted = false;
@@ -78,7 +80,7 @@ public class ExperimentConfig : MonoBehaviour
             randomAllocationToggle.onValueChanged.AddListener(OnRandomAllocationChanged);
         startBtn.onClick.AddListener(OnStartClicked);
 
-        // 读取 Toggle 初始状态
+        // Read toggle initial state.
         _warmStart = warmStartToggle.isOn;
         if (randomAllocationToggle != null)
         {
@@ -87,12 +89,17 @@ public class ExperimentConfig : MonoBehaviour
         }
 
         HighlightScale(scale5Btn);
-        HighlightRounds(_samplingRounds == RandomAllocationSamplingRounds ? rounds15Btn : rounds10Btn);
+        HighlightRounds((_randomAllocation || _samplingRounds == RandomAllocationSamplingRounds) ? rounds15Btn : rounds10Btn);
         UpdateRandomAllocationUiState();
     }
 
     void SetScale(int val) { _likertMax = val; }
-    void SetRounds(int samplingVal) { _samplingRounds = samplingVal; }
+    void SetRounds(int samplingVal)
+    {
+        _samplingRounds = samplingVal;
+        if (!_randomAllocation)
+            _manualSamplingRounds = samplingVal;
+    }
 
     void HighlightScale(Button selected)
     {
@@ -191,11 +198,19 @@ public class ExperimentConfig : MonoBehaviour
 
     void OnRandomAllocationChanged(bool isOn)
     {
+        if (isOn && !_randomAllocation)
+            _manualSamplingRounds = _samplingRounds;
+
         _randomAllocation = isOn;
         if (_randomAllocation)
         {
             _samplingRounds = RandomAllocationSamplingRounds;
             HighlightRounds(rounds15Btn);
+        }
+        else
+        {
+            _samplingRounds = _manualSamplingRounds;
+            HighlightRounds(_samplingRounds == RandomAllocationSamplingRounds ? rounds15Btn : rounds10Btn);
         }
 
         UpdateRandomAllocationUiState();
@@ -258,9 +273,11 @@ public class ExperimentConfig : MonoBehaviour
         TextMeshProUGUI bestMatch = null;
         float bestScore = float.MaxValue;
 
-        foreach (TextMeshProUGUI text in warmStartToggle.transform.parent.GetComponentsInChildren<TextMeshProUGUI>(true))
+        Transform parent = warmStartToggle.transform.parent;
+        for (int i = 0; i < parent.childCount; i++)
         {
-            if (text == null || text.transform.parent != warmStartToggle.transform.parent)
+            TextMeshProUGUI text = parent.GetChild(i).GetComponent<TextMeshProUGUI>();
+            if (text == null)
                 continue;
 
             Vector2 delta = text.rectTransform.anchoredPosition - warmToggleRect.anchoredPosition;
@@ -269,7 +286,7 @@ public class ExperimentConfig : MonoBehaviour
                 continue;
 
             // Match the label that is horizontally nearby, while strongly preferring the same row.
-            float score = Mathf.Abs(delta.y) * WarmStartLabelYAxisPriority + Mathf.Abs(delta.x);
+            float score = Mathf.Abs(delta.y) * LabelYAxisPriority + Mathf.Abs(delta.x);
             if (score >= bestScore)
                 continue;
 
