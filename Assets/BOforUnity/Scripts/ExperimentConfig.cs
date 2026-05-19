@@ -80,7 +80,10 @@ public class ExperimentConfig : MonoBehaviour
         // 读取 Toggle 初始状态
         _warmStart = warmStartToggle.isOn;
         if (randomAllocationToggle != null)
+        {
             randomAllocationToggle.isOn = _randomAllocation;
+            OnRandomAllocationChanged(_randomAllocation);
+        }
 
         HighlightScale(scale5Btn);
         HighlightRounds(_samplingRounds == RandomAllocationSamplingRounds ? rounds15Btn : rounds10Btn);
@@ -131,9 +134,7 @@ public class ExperimentConfig : MonoBehaviour
     void ApplyConfig()
     {
         int effectiveSamplingRounds = _randomAllocation ? RandomAllocationSamplingRounds : _samplingRounds;
-        int effectiveOptimizationRounds = _randomAllocation
-            ? 0
-            : (effectiveSamplingRounds == RandomAllocationSamplingRounds ? 0 : GuidedOptimizationRounds);
+        int effectiveOptimizationRounds = GetEffectiveOptimizationRounds(effectiveSamplingRounds);
         bool effectiveWarmStart = _randomAllocation ? false : _warmStart;
         bool enableFinalDesignRound = !_randomAllocation;
 
@@ -215,6 +216,14 @@ public class ExperimentConfig : MonoBehaviour
         }
     }
 
+    int GetEffectiveOptimizationRounds(int effectiveSamplingRounds)
+    {
+        if (_randomAllocation || effectiveSamplingRounds == RandomAllocationSamplingRounds)
+            return 0;
+
+        return GuidedOptimizationRounds;
+    }
+
     void EnsureRandomAllocationToggle()
     {
         if (randomAllocationToggle != null || warmStartToggle == null)
@@ -226,7 +235,6 @@ public class ExperimentConfig : MonoBehaviour
 
         randomAllocationToggle = Instantiate(warmStartToggle, warmStartToggle.transform.parent);
         randomAllocationToggle.gameObject.name = "Random Allocation Toggle";
-        randomAllocationToggle.onValueChanged = new Toggle.ToggleEvent();
         randomAllocationToggle.isOn = _randomAllocation;
 
         RectTransform warmToggleRect = warmStartToggle.GetComponent<RectTransform>();
@@ -245,12 +253,27 @@ public class ExperimentConfig : MonoBehaviour
         if (warmStartToggle == null || warmStartToggle.transform.parent == null)
             return null;
 
+        RectTransform warmToggleRect = warmStartToggle.GetComponent<RectTransform>();
+        TextMeshProUGUI bestMatch = null;
+        float bestScore = float.MaxValue;
+
         foreach (TextMeshProUGUI text in warmStartToggle.transform.parent.GetComponentsInChildren<TextMeshProUGUI>(true))
         {
-            if (text != null && text.text == "Warm Start")
-                return text;
+            if (text == null || text.transform.parent != warmStartToggle.transform.parent)
+                continue;
+
+            Vector2 delta = text.rectTransform.anchoredPosition - warmToggleRect.anchoredPosition;
+            if (delta.x >= 0f)
+                continue;
+
+            float score = Mathf.Abs(delta.y) * 1000f + Mathf.Abs(delta.x);
+            if (score >= bestScore)
+                continue;
+
+            bestScore = score;
+            bestMatch = text;
         }
 
-        return null;
+        return bestMatch;
     }
 }
