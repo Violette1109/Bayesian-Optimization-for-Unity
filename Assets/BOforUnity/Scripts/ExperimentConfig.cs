@@ -31,6 +31,7 @@ public class ExperimentConfig : MonoBehaviour
     private const int RandomAllocationSamplingRounds = 15;
     private const int GuidedOptimizationRounds = 5;
     private const float GeneratedToggleYOffset = -80f;
+    private const float WarmStartLabelYAxisPriority = 1000f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
@@ -263,10 +264,12 @@ public class ExperimentConfig : MonoBehaviour
                 continue;
 
             Vector2 delta = text.rectTransform.anchoredPosition - warmToggleRect.anchoredPosition;
+            // Config-panel labels are expected to sit to the left of their toggle control.
             if (delta.x >= 0f)
                 continue;
 
-            float score = Mathf.Abs(delta.y) * 1000f + Mathf.Abs(delta.x);
+            // Match the label that is horizontally nearby, while strongly preferring the same row.
+            float score = Mathf.Abs(delta.y) * WarmStartLabelYAxisPriority + Mathf.Abs(delta.x);
             if (score >= bestScore)
                 continue;
 
