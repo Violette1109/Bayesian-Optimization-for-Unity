@@ -42,6 +42,9 @@ CSV_PATH_PARAMETERS = ""
 CSV_PATH_OBJECTIVES = ""
 WARM_START_OBJECTIVE_FORMAT = "auto"  # auto|raw|normalized_max|normalized_native
 
+# random allocation: skip BO and assign parameters uniformly at random each round
+RANDOM_ALLOCATION = False
+
 # study info
 USER_ID = ""
 CONDITION_ID = ""
@@ -433,8 +436,16 @@ def generate_initial_data(conn, n_samples):
         with open(obs_csv, 'w', newline='') as f:
             csv.writer(f, delimiter=';').writerow(header)
 
-    train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
-    print("Initial Sobol X in [0,1]:", train_x, flush=True)
+    if RANDOM_ALLOCATION:
+        rng = torch.Generator()
+        rng.manual_seed(SEED)
+        train_x = torch.rand(n_samples, PROBLEM_DIM, dtype=torch.double, generator=rng)
+        print("Random allocation X in [0,1]:", train_x, flush=True)
+        phase_label = 'random'
+    else:
+        train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
+        print("Initial Sobol X in [0,1]:", train_x, flush=True)
+        phase_label = 'sampling'
 
     train_obj = []
     for i, x in enumerate(train_x):
@@ -448,7 +459,7 @@ def generate_initial_data(conn, n_samples):
         y_den = [denormalize_to_original_obj(y_np[j], objectives_info[j][0], objectives_info[j][1], objectives_info[j][2]) for j in range(NUM_OBJS)]
         row = [USER_ID, CONDITION_ID, GROUP_ID,
                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-               i+1, 'sampling', 'FALSE', *y_den, *x_den]
+               i+1, phase_label, 'FALSE', *y_den, *x_den]
         with open(obs_csv, 'a', newline='') as f:
             csv.writer(f, delimiter=';').writerow(row)
         send_json_line(conn, {"type": "tempCoverage", "value": float(i+1)/float(max(1,n_samples))})
@@ -662,6 +673,7 @@ def main():
     global N_INITIAL, N_ITERATIONS, BATCH_SIZE, NUM_RESTARTS, RAW_SAMPLES, MC_SAMPLES, SEED
     global PROBLEM_DIM, NUM_OBJS, ref_point, problem_bounds
     global WARM_START, CSV_PATH_PARAMETERS, CSV_PATH_OBJECTIVES, WARM_START_OBJECTIVE_FORMAT
+    global RANDOM_ALLOCATION
     global USER_ID, CONDITION_ID, GROUP_ID, USER_LOG_ID
     global parameter_names, objective_names, parameters_info, objectives_info
     global SOCKET_RECV_BUF
@@ -712,6 +724,7 @@ def main():
         PROBLEM_DIM    = get_cfg_int(cfg, "nParameters", required=True)
         NUM_OBJS       = get_cfg_int(cfg, "nObjectives", required=True)
         WARM_START     = bool(cfg.get("warmStart", False))
+        RANDOM_ALLOCATION = bool(cfg.get("randomAllocation", False))
 
         CSV_PATH_PARAMETERS = str(cfg.get("initialParametersDataPath") or "")
         CSV_PATH_OBJECTIVES = str(cfg.get("initialObjectivesDataPath") or "")
@@ -741,6 +754,14 @@ def main():
         if BATCH_SIZE != 1:
             print(f"Warning: batchSize={BATCH_SIZE} is not supported in this HITL loop; forcing batchSize=1.", flush=True)
             BATCH_SIZE = 1
+
+        if RANDOM_ALLOCATION and N_ITERATIONS > 0:
+            print(
+                f"Warning: randomAllocation=True forces numOptimizationIterations to 0 "
+                f"(was {N_ITERATIONS}). Objectives will not influence parameter selection.",
+                flush=True,
+            )
+            N_ITERATIONS = 0
 
         user = init_msg.get("user", {}) or {}
         USER_ID      = normalize_user_token(user.get("userId"), default="-1")
@@ -799,7 +820,8 @@ def main():
             BATCH_SIZE=BATCH_SIZE, NUM_RESTARTS=NUM_RESTARTS, RAW_SAMPLES=RAW_SAMPLES,
             N_ITERATIONS=N_ITERATIONS, MC_SAMPLES=MC_SAMPLES,
             N_INITIAL=N_INITIAL, SEED=SEED, PROBLEM_DIM=PROBLEM_DIM, NUM_OBJS=NUM_OBJS,
-            SOCKET_TIMEOUT_SEC=SOCKET_TIMEOUT_SEC, WARM_START_OBJECTIVE_FORMAT=WARM_START_OBJECTIVE_FORMAT
+            SOCKET_TIMEOUT_SEC=SOCKET_TIMEOUT_SEC, WARM_START_OBJECTIVE_FORMAT=WARM_START_OBJECTIVE_FORMAT,
+            RANDOM_ALLOCATION=RANDOM_ALLOCATION
         ), flush=True)
 
         mobo_execute(conn, SEED, N_ITERATIONS, N_INITIAL)

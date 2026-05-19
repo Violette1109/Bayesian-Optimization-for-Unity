@@ -24,6 +24,9 @@ CSV_PATH_PARAMETERS = ""
 CSV_PATH_OBJECTIVES = ""
 WARM_START_OBJECTIVE_FORMAT = "auto"  # auto|raw|normalized_max|normalized_native
 
+# random allocation: skip BO and assign parameters uniformly at random each round
+RANDOM_ALLOCATION = False
+
 USER_ID = ""
 CONDITION_ID = ""
 GROUP_ID = ""
@@ -781,13 +784,22 @@ def run_cabop(conn):
             break
 
         t0 = time.time()
-        x_candidate, _ = optimizer.ask(n_init=max(0, int(N_INITIAL)))
+        if RANDOM_ALLOCATION:
+            # Generate a uniformly random candidate without querying the BO model.
+            rng = np.random.default_rng(seed=SEED + iteration)
+            x_candidate = {
+                name: float(rng.uniform(lo, hi))
+                for name, (lo, hi, *_) in zip(parameter_names, parameters_info)
+            }
+        else:
+            x_candidate, _ = optimizer.ask(n_init=max(0, int(N_INITIAL)))
         elapsed = time.time() - t0
 
         costs, x_realized = optimizer.select_sample(x_candidate, prefab=prefab)
         scalarized, objective_raw = evaluate_design(conn, x_realized)
 
-        optimizer.tell(x_realized, float(scalarized), x_candidate, update_rule=CABOP_UPDATE_RULE)
+        if not RANDOM_ALLOCATION:
+            optimizer.tell(x_realized, float(scalarized), x_candidate, update_rule=CABOP_UPDATE_RULE)
 
         realized_cost = float(np.sum(costs))
         cumulative_cost += realized_cost
@@ -797,7 +809,10 @@ def run_cabop(conn):
         coverage = float(np.clip(1.0 - best_scalarized, -1e9, 1.0)) if np.isfinite(best_scalarized) else 0.0
 
         absolute_iteration = iteration + 1
-        phase = "sampling" if (not WARM_START and absolute_iteration <= N_INITIAL) else "optimization"
+        if RANDOM_ALLOCATION:
+            phase = "random"
+        else:
+            phase = "sampling" if (not WARM_START and absolute_iteration <= N_INITIAL) else "optimization"
 
         append_execution_time(absolute_iteration, elapsed)
         append_observation_row(absolute_iteration, phase, scalarized, objective_raw, x_realized)
@@ -821,6 +836,7 @@ def run_cabop(conn):
 def parse_init_and_validate(init_msg, forced_mode):
     global N_INITIAL, N_ITERATIONS, SEED, PROBLEM_DIM, NUM_OBJS
     global WARM_START, CSV_PATH_PARAMETERS, CSV_PATH_OBJECTIVES, WARM_START_OBJECTIVE_FORMAT
+    global RANDOM_ALLOCATION
     global USER_ID, CONDITION_ID, GROUP_ID, USER_LOG_ID
     global OPTIMIZER_BACKEND, CABOP_MODE, CABOP_USE_COST_AWARE
     global CABOP_UPDATE_RULE, CABOP_ENABLE_COST_BUDGET, CABOP_MAX_CUMULATIVE_COST
@@ -834,6 +850,7 @@ def parse_init_and_validate(init_msg, forced_mode):
     NUM_OBJS = get_cfg_int(cfg, "nObjectives", required=True)
 
     WARM_START = bool(cfg.get("warmStart", False))
+    RANDOM_ALLOCATION = bool(cfg.get("randomAllocation", False))
     CSV_PATH_PARAMETERS = str(cfg.get("initialParametersDataPath") or "")
     CSV_PATH_OBJECTIVES = str(cfg.get("initialObjectivesDataPath") or "")
     WARM_START_OBJECTIVE_FORMAT = str(cfg.get("warmStartObjectiveFormat", "auto") or "auto").strip().lower()
@@ -865,6 +882,14 @@ def parse_init_and_validate(init_msg, forced_mode):
             "warmStartObjectiveFormat must be one of: auto, raw, normalized_max, normalized_native; "
             f"got '{WARM_START_OBJECTIVE_FORMAT}'"
         )
+
+    if RANDOM_ALLOCATION and N_ITERATIONS > 0:
+        print(
+            f"Warning: randomAllocation=True forces numOptimizationIterations to 0 "
+            f"(was {N_ITERATIONS}). Objectives will not influence parameter selection.",
+            flush=True,
+        )
+        N_ITERATIONS = 0
 
     user = init_msg.get("user", {}) or {}
     USER_ID = normalize_user_token(user.get("userId"), default="-1")

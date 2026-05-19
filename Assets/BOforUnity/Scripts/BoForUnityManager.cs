@@ -83,6 +83,7 @@ namespace BOforUnity
         [SerializeField] private bool enableSamplingEdit = false; // checkbox in inspector
         
         public bool warmStart = false;
+        public bool randomAllocation = false;
         public bool perfectRatingActive = false;
         public bool perfectRatingInInitialRounds = false;
         public string initialParametersDataPath;

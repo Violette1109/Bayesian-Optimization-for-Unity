@@ -12,6 +12,7 @@ public class ExperimentConfig : MonoBehaviour
     public Button rounds10Btn;
     public Button rounds15Btn;
     public Toggle warmStartToggle;
+    public Toggle randomAllocationToggle;
     public Button startBtn;
 
     [Header("References")]
@@ -24,6 +25,7 @@ public class ExperimentConfig : MonoBehaviour
     private static int _likertMax = 5;
     private static int _samplingRounds = 10;
     private static bool _warmStart = false;
+    private static bool _randomAllocation = false;
     private static bool _experimentStarted = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -32,6 +34,7 @@ public class ExperimentConfig : MonoBehaviour
         _likertMax = 5;
         _samplingRounds = 10;
         _warmStart = false;
+        _randomAllocation = false;
         _experimentStarted = false;
     }
 
@@ -64,10 +67,14 @@ public class ExperimentConfig : MonoBehaviour
         rounds10Btn.onClick.AddListener(() => { SetRounds(10); HighlightRounds(rounds10Btn); });
         rounds15Btn.onClick.AddListener(() => { SetRounds(15); HighlightRounds(rounds15Btn); });
         warmStartToggle.onValueChanged.AddListener(val => _warmStart = val);
+        if (randomAllocationToggle != null)
+            randomAllocationToggle.onValueChanged.AddListener(val => _randomAllocation = val);
         startBtn.onClick.AddListener(OnStartClicked);
 
         // 读取 Toggle 初始状态
         _warmStart = warmStartToggle.isOn;
+        if (randomAllocationToggle != null)
+            _randomAllocation = randomAllocationToggle.isOn;
 
         HighlightScale(scale5Btn);
         HighlightRounds(rounds10Btn);
@@ -151,7 +158,12 @@ public class ExperimentConfig : MonoBehaviour
         boManager.numSamplingIterations = _samplingRounds;
         boManager.numOptimizationIterations = (_samplingRounds == 15) ? 0 : 5;
         boManager.warmStart = _warmStart;
+        boManager.randomAllocation = _randomAllocation;
         boManager.enableFinalDesignRound = true;
+
+        // Random allocation has no optimization phase: objectives must not influence parameters.
+        if (_randomAllocation)
+            boManager.numOptimizationIterations = 0;
 
         boManager.totalIterations = _warmStart
             ? boManager.numOptimizationIterations

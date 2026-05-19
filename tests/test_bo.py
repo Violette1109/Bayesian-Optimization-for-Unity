@@ -86,6 +86,15 @@ def install_stub_modules():
     torch_mod.manual_seed = lambda seed: None
     torch_mod.zeros = lambda n, dtype=None: FakeTensor(np.zeros(n, dtype=np.float64))
     torch_mod.ones = lambda n, dtype=None: FakeTensor(np.ones(n, dtype=np.float64))
+
+    class _FakeGenerator:
+        def manual_seed(self, seed):
+            return self
+
+    torch_mod.Generator = _FakeGenerator
+    torch_mod.rand = lambda *size, dtype=None, generator=None: FakeTensor(
+        np.random.default_rng(0).random(size).astype(np.float64)
+    )
     sys.modules["torch"] = torch_mod
 
     botorch_mod = types.ModuleType("botorch")
@@ -801,6 +810,124 @@ class BoTests(unittest.TestCase):
             # row0 remains untouched due mismatch fallback, row1 updated for current run tail.
             self.assertIn(";FALSE;", lines[1])
             self.assertIn(";TRUE;", lines[2])
+
+    def test_random_allocation_forces_zero_optimization_iterations(self):
+        """When randomAllocation=True, numOptimizationIterations must be forced to 0."""
+        bo = load_bo_module()
+        init_msg = self._base_init()
+        init_msg["config"]["randomAllocation"] = True
+        init_msg["config"]["numOptimizationIterations"] = 5
+
+        called = {}
+
+        def _capture_execute(conn_arg, seed, iterations, initial_samples):
+            called["iterations"] = iterations
+            called["initial_samples"] = initial_samples
+            return [], FakeTensor([[0.0]]), FakeTensor([[0.0]])
+
+        self._run_main_with_init(bo, init_msg, execute_stub=_capture_execute)
+        self.assertEqual(called.get("iterations"), 0,
+                         "randomAllocation=True must force optimization iterations to 0")
+
+    def test_random_allocation_false_leaves_iterations_unchanged(self):
+        """When randomAllocation=False, numOptimizationIterations is unchanged."""
+        bo = load_bo_module()
+        init_msg = self._base_init()
+        init_msg["config"]["randomAllocation"] = False
+        init_msg["config"]["numOptimizationIterations"] = 3
+
+        called = {}
+
+        def _capture_execute(conn_arg, seed, iterations, initial_samples):
+            called["iterations"] = iterations
+            return [], FakeTensor([[0.0]]), FakeTensor([[0.0]])
+
+        self._run_main_with_init(bo, init_msg, execute_stub=_capture_execute)
+        self.assertEqual(called.get("iterations"), 3,
+                         "randomAllocation=False must leave optimization iterations unchanged")
+
+    def test_generate_initial_data_random_allocation_logs_random_phase(self):
+        """When RANDOM_ALLOCATION=True, generate_initial_data logs phase as 'random'."""
+        bo = load_bo_module()
+
+        bo.RANDOM_ALLOCATION = True
+        bo.SEED = 42
+        bo.PROBLEM_DIM = 1
+        bo.USER_ID = "u"
+        bo.CONDITION_ID = "c"
+        bo.GROUP_ID = "g"
+        bo.parameter_names = ["p0"]
+        bo.objective_names = ["o0"]
+        bo.parameters_info = [(0.0, 10.0)]
+        bo.objectives_info = [(0.0, 1.0, 0)]
+
+        import torch as _torch
+        bo.problem_bounds = _torch.stack(
+            [_torch.zeros(1, dtype=_torch.double),
+             _torch.ones(1, dtype=_torch.double)],
+            dim=0,
+        )
+
+        objective_responses = [FakeTensor([0.5]), FakeTensor([0.8])]
+        response_iter = iter(objective_responses)
+
+        def _fake_obj(conn, x):
+            return next(response_iter)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            bo.PROJECT_PATH = tmp
+            bo.objective_function = _fake_obj
+            bo.send_json_line = lambda conn, obj: None  # suppress network calls
+            bo.generate_initial_data(conn=None, n_samples=2)
+
+            df = pd.read_csv(
+                pathlib.Path(tmp) / "ObservationsPerEvaluation.csv",
+                delimiter=";",
+            )
+            phases = df["Phase"].tolist()
+            self.assertTrue(all(p == "random" for p in phases),
+                            f"Expected all phases to be 'random', got {phases}")
+
+    def test_generate_initial_data_default_logs_sampling_phase(self):
+        """When RANDOM_ALLOCATION=False (default), generate_initial_data logs phase as 'sampling'."""
+        bo = load_bo_module()
+
+        bo.RANDOM_ALLOCATION = False
+        bo.SEED = 42
+        bo.PROBLEM_DIM = 1
+        bo.USER_ID = "u"
+        bo.CONDITION_ID = "c"
+        bo.GROUP_ID = "g"
+        bo.parameter_names = ["p0"]
+        bo.objective_names = ["o0"]
+        bo.parameters_info = [(0.0, 10.0)]
+        bo.objectives_info = [(0.0, 1.0, 0)]
+
+        import torch as _torch
+        bo.problem_bounds = _torch.stack(
+            [_torch.zeros(1, dtype=_torch.double),
+             _torch.ones(1, dtype=_torch.double)],
+            dim=0,
+        )
+
+        response_iter = iter([FakeTensor([0.5]), FakeTensor([0.8])])
+
+        def _fake_obj(conn, x):
+            return next(response_iter)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            bo.PROJECT_PATH = tmp
+            bo.objective_function = _fake_obj
+            bo.send_json_line = lambda conn, obj: None  # suppress network calls
+            bo.generate_initial_data(conn=None, n_samples=2)
+
+            df = pd.read_csv(
+                pathlib.Path(tmp) / "ObservationsPerEvaluation.csv",
+                delimiter=";",
+            )
+            phases = df["Phase"].tolist()
+            self.assertTrue(all(p == "sampling" for p in phases),
+                            f"Expected all phases to be 'sampling', got {phases}")
 
 
 if __name__ == "__main__":
