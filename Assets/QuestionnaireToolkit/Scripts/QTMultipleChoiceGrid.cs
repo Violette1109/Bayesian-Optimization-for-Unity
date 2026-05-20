@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using QuestionnaireToolkit.Scripts.SimpleJSON;
 using TMPro;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -90,7 +88,7 @@ namespace QuestionnaireToolkit.Scripts
                     if (!_oldHeaderName.Equals(headerName))
                     {
                         _oldHeaderName = headerName;
-                        name = QTOptionNameUtility.Compose(QTOptionNameUtility.GetValue(name), headerName);
+                        name = name.Split('_')[0] + "_" + headerName;
                     }
 
                     // update question field
@@ -171,7 +169,7 @@ namespace QuestionnaireToolkit.Scripts
             if (!_oldHeaderName.Equals(headerName))
             {
                 _oldHeaderName = headerName;
-                name = QTOptionNameUtility.Compose(QTOptionNameUtility.GetValue(name), headerName);
+                name = name.Split('_')[0] + "_" + headerName;
             }
 
             // update question field

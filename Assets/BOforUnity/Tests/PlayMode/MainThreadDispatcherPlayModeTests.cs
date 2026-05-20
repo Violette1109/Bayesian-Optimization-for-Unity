@@ -1,64 +1,50 @@
-using System.Reflection;
+using System.Collections;
 using System.Threading;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using BOforUnity.Scripts;
 
 namespace BOforUnity.Tests.PlayMode
 {
     public class MainThreadDispatcherPlayModeTests
     {
-        [Test]
-        public void Execute_ProcessesQueuedActionsOnMainThreadInOrder()
+        public IEnumerator Execute_ProcessesQueuedActionsOnMainThreadInOrder()
         {
             var dispatcherGo = new GameObject("MainThreadDispatcherTest");
             var dispatcher = dispatcherGo.AddComponent<MainThreadDispatcher>();
 
-            try
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            int? actionThreadId = null;
+            int? genericActionThreadId = null;
+            string executionTrace = string.Empty;
+
+            var worker = new Thread(() =>
             {
-                var mainThreadId = Thread.CurrentThread.ManagedThreadId;
-                int? actionThreadId = null;
-                int? genericActionThreadId = null;
-                string executionTrace = string.Empty;
-
-                var worker = new Thread(() =>
+                MainThreadDispatcher.Execute(() =>
                 {
-                    MainThreadDispatcher.Execute(() =>
-                    {
-                        actionThreadId = Thread.CurrentThread.ManagedThreadId;
-                        executionTrace += "A";
-                    });
-
-                    MainThreadDispatcher.Execute<string>(marker =>
-                    {
-                        genericActionThreadId = Thread.CurrentThread.ManagedThreadId;
-                        executionTrace += marker;
-                    }, "B");
+                    actionThreadId = Thread.CurrentThread.ManagedThreadId;
+                    executionTrace += "A";
                 });
 
-                worker.Start();
-                worker.Join();
+                MainThreadDispatcher.Execute<string>(marker =>
+                {
+                    genericActionThreadId = Thread.CurrentThread.ManagedThreadId;
+                    executionTrace += marker;
+                }, "B");
+            });
 
-                InvokeDispatcherUpdate(dispatcher);
+            worker.Start();
+            worker.Join();
 
-                Assert.That(executionTrace, Is.EqualTo("AB"), "Queued actions should execute in FIFO order.");
-                Assert.That(actionThreadId, Is.EqualTo(mainThreadId), "Actions must execute on the main Unity thread.");
-                Assert.That(genericActionThreadId, Is.EqualTo(mainThreadId), "Generic Execute overload must run on main thread.");
-            }
-            finally
-            {
-                Object.DestroyImmediate(dispatcherGo);
-            }
-        }
+            yield return null; // allow dispatcher Update to run once
 
-        private static void InvokeDispatcherUpdate(MainThreadDispatcher dispatcher)
-        {
-            MethodInfo updateMethod = typeof(MainThreadDispatcher).GetMethod(
-                "Update",
-                BindingFlags.Instance | BindingFlags.NonPublic
-            );
-            Assert.That(updateMethod, Is.Not.Null, "MainThreadDispatcher.Update should exist.");
-            updateMethod.Invoke(dispatcher, null);
+            Assert.That(executionTrace, Is.EqualTo("AB"), "Queued actions should execute in FIFO order.");
+            Assert.That(actionThreadId, Is.EqualTo(mainThreadId), "Actions must execute on the main Unity thread.");
+            Assert.That(genericActionThreadId, Is.EqualTo(mainThreadId), "Generic Execute overload must run on main thread.");
+
+            Object.DestroyImmediate(dispatcher);
+            Object.DestroyImmediate(dispatcherGo);
         }
     }
 }

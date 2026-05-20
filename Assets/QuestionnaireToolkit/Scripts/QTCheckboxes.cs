@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -80,13 +81,13 @@ namespace QuestionnaireToolkit.Scripts
         {
             try
             {
-                if (!Application.isPlaying)
+                if (Application.isPlaying)
                 {
                     // update headerName field
                     if (!_oldHeaderName.Equals(headerName))
                     {
                         _oldHeaderName = headerName;
-                        name = QTOptionNameUtility.Compose(QTOptionNameUtility.GetValue(name), headerName);
+                        name = name.Split('_')[0] + "_" + headerName;
                         _questionnaireManager.BuildHeaderItems();
                     }
             
@@ -132,8 +133,17 @@ namespace QuestionnaireToolkit.Scripts
             {
                 answerValue = "" + options.Count;
             }
-            g.name = QTOptionNameUtility.Compose(answerValue, answerOption);
-            g.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>().text = QTOptionNameUtility.GetText(g.name);
+            /*
+            if (answerOption.Equals(""))
+            {
+                g.name = answerValue + "_Option " + options.Count;
+            }
+            */
+            else
+            {
+                g.name = answerValue + "_" + answerOption;
+            }
+            g.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>().text = g.name.Split('_')[1];
             
             // If in VR mode set position and scaling as needed
             if (inWorldSpace)
@@ -153,8 +163,8 @@ namespace QuestionnaireToolkit.Scripts
         /// </summary>
         public void OptionSelected(int sel)
         {
-            answerOption = QTOptionNameUtility.GetText(options[sel].name);
-            answerValue = QTOptionNameUtility.GetValue(options[sel].name);
+            answerOption = options[sel].name.Split('_')[1];
+            answerValue = options[sel].name.Split('_')[0];
         }
         
         /// <summary>
@@ -167,8 +177,8 @@ namespace QuestionnaireToolkit.Scripts
             var o = options[selectedIndex];
             //if (answerOption.Equals("") || answerOption.Equals(o.name) || answerValue.Equals("")) return;
             if (answerOption.Equals(o.name) || answerValue.Equals("")) return;
-            o.name = QTOptionNameUtility.Compose(answerValue, answerOption);
-            o.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>().text = QTOptionNameUtility.GetText(o.name);
+            o.name = answerValue + "_" + answerOption;
+            o.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>().text = o.name.Split('_')[1];
             answerOption = "";
             answerValue = "" + (options.Count + 1);
         }
@@ -194,7 +204,7 @@ namespace QuestionnaireToolkit.Scripts
                 options[sel].transform.SetSiblingIndex(sel);
                 for(var i  = 0; i < options.Count; i++)
                 {
-                    options[i].name = QTOptionNameUtility.RenameValue(options[i].name, i + 1);
+                    options[i].name = (i+1) + "_" + options[i].name.Split('_')[1];
                 }
             }
         }

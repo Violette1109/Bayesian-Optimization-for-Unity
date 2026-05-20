@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
  using System.Text;
+ using BOforUnity;
  using QuestionnaireToolkit.Scripts.MemberReflection.Reflection;
 using QuestionnaireToolkit.Scripts.SimpleJSON;
 using QuestionnaireToolkit.Scripts.StandaloneFileBrowser;
@@ -74,7 +75,7 @@ namespace QuestionnaireToolkit.Scripts
 
         [Header("Results File Settings")] 
         public bool generateResultsFile = true;
-        public string resultsSavePath = "Assets/StreamingAssets/BOData/LogData/";
+        public string resultsSavePath = "Assets/QuestionnaireToolkit/Results/";
         public string resultsFileName = "MyQuestionnaire";
         public FileFormat resultsFileFormat = FileFormat.csv;
         [Tooltip("If true, then a new results file will be created whenever a questionnaire is started. The name above will be used with an additional counter for the file name.")]
@@ -88,45 +89,7 @@ namespace QuestionnaireToolkit.Scripts
         private GameObject currentImportedPage;
         public GameObject currentImportedItem;
         public string exportPath = "..select..";
-
-        [Header("BO Context Logging")]
-        [Tooltip("Automatically add UserID, ConditionID, and GroupID through Additional CSV Items.")]
-        public bool logBoContextColumns = true;
-        [Tooltip("When available, read the context values from BoForUnityManager. If no manager is available, the fallback values below are used.")]
-        public bool readBoContextFromManager = true;
-        [Tooltip("Save questionnaire results below resultsSavePath/UserID/ConditionID.")]
-        public bool saveResultsInBoContextFolders = true;
-        public string contextUserId = "-1";
-        public string contextConditionId = "-1";
-        public string contextGroupId = "-1";
-
-        public string BoContextUserIdForCsv
-        {
-            get
-            {
-                ResolveBoContextForLogging(out string resolvedUserId, out string resolvedConditionId, out string resolvedGroupId);
-                return resolvedUserId;
-            }
-        }
-
-        public string BoContextConditionIdForCsv
-        {
-            get
-            {
-                ResolveBoContextForLogging(out string resolvedUserId, out string resolvedConditionId, out string resolvedGroupId);
-                return resolvedConditionId;
-            }
-        }
-
-        public string BoContextGroupIdForCsv
-        {
-            get
-            {
-                ResolveBoContextForLogging(out string resolvedUserId, out string resolvedConditionId, out string resolvedGroupId);
-                return resolvedGroupId;
-            }
-        }
-
+        
         [Header("Results Visualization")]
         public bool customUserId = false;
         public string userId = "";
@@ -196,12 +159,7 @@ namespace QuestionnaireToolkit.Scripts
         private int currentRun;
         [HideInInspector]
         public QTManager _qtManager;
-        private IQuestionnaireOptimizationBridge _cachedOptimizationBridge;
-        private bool _contextUserFolderReserved;
-        private string _contextUserFolderRoot;
-        private string _contextRequestedUserId;
-        private string _contextRequestedConditionId;
-        private string _contextResolvedUserId;
+        private BoForUnityManager _cachedBoForUnityManager;
 
         private bool EnsureVisiblePage(string caller)
         {
@@ -373,8 +331,6 @@ namespace QuestionnaireToolkit.Scripts
                 
                 if(!overwriteResultsHeaderItems) 
                     BuildHeaderItems(); // build the final header item list
-
-                EnsureBoContextAdditionalCsvItems();
                 
                 if (displayMode == DisplayMode.VR)
                 {
@@ -408,13 +364,8 @@ namespace QuestionnaireToolkit.Scripts
 
                 if (generateResultsFile)
                 {
-                    var systemPath = ResolveResultsDirectory(resultsSavePath);
-                    if (saveResultsInBoContextFolders)
-                    {
-                        systemPath = ResolveBoContextResultsDirectory(systemPath);
-                    }
-
-                    userPath = Path.Combine(systemPath, resultsFileName);
+                    var systemPath = Application.persistentDataPath + resultsSavePath;
+                    userPath = systemPath.TrimEnd('/') + "/" + resultsFileName;
 
                     if (newFileEachStart)
                     {
@@ -458,9 +409,6 @@ namespace QuestionnaireToolkit.Scripts
                             {
                                 foreach (var aci in additionalCsvItems)
                                 {
-                                    if (IsEmptyAdditionalCsvItem(aci))
-                                        continue;
-
                                     if (aci == null)
                                     {
                                         Debug.LogWarning("Skipping null entry in additionalCsvItems while creating questionnaire header.");
@@ -618,8 +566,6 @@ namespace QuestionnaireToolkit.Scripts
                     resultsFileName = TryResultFileName(resultsFileName);
                     _oldResultFileName = resultsFileName;
                 }
-
-                EnsureBoContextAdditionalCsvItems();
                 
                 // update device type config
                 if (_oldDeviceType != (int) deviceType)
@@ -1051,11 +997,11 @@ namespace QuestionnaireToolkit.Scripts
                 page.SetActive(true); // re-enable all pages otherwise the items cannot be found
                 var pageScript = page.GetComponent<QTQuestionPageManager>();
                 
-                jsonString += "{\"pId\":\"page" + pageCount + "\","
+                jsonString += "{\"pId\":\"page" + pageCount + "\"," 
                               + "\"show_fullscreen_text\":\"" + pageScript.showFullscreenText + "\","
-                              + "\"fullscreen_text\":" + JsonString(pageScript.fullscreenText) + ","
+                              + "\"fullscreen_text\":\"" + pageScript.fullscreenText.Replace("\"", "\\\"").Replace("\n", "\\n") + "\","
                               + "\"show_instruction_panel\":\"" + pageScript.showTopPanel + "\","
-                              + "\"instruction_text\":" + JsonString(pageScript.instructionText) + ","
+                              + "\"instruction_text\":\"" + pageScript.instructionText.Replace("\"", "\\\"").Replace("\n", "\\n") + "\","
                               + "\"qItems\":[";
                 pageCount++;
 
@@ -1069,34 +1015,34 @@ namespace QuestionnaireToolkit.Scripts
                     {
                         case "QTLinearScale":
                             jsonString += "\"qType\":\"linear_scale\","
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTLinearScale>().answerRequired + "\","
                                           + "\"options\":[";
                             foreach (var option in question.GetComponent<QTLinearScale>().options)
                             {
-                                jsonString += "{\"answer_value\":" + JsonString(GetExportOptionValue(option.name)) + ",\"answer_option\":" + JsonString(GetExportOptionText(option.name)) + "},";
+                                jsonString += "{\"answer_value\":\"" + option.name.Split('_')[0] + "\",\"answer_option\":\"" + option.name.Split('_')[1] + "\"},";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTCheckboxes":
                             jsonString += "\"qType\":\"checkboxes\"," 
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTCheckboxes>().answerRequired + "\","
                                           + "\"include_other_option\":\"" + question.GetComponent<QTCheckboxes>().includeOtherOption + "\","
                                           + "\"options\":[";
                             foreach (var option in question.GetComponent<QTCheckboxes>().options)
                             {
-                                jsonString += "{\"answer_value\":" + JsonString(GetExportOptionValue(option.name)) + ",\"answer_option\":" + JsonString(GetExportOptionText(option.name)) + "},";
+                                jsonString += "{\"answer_value\":\"" + option.name.Split('_')[0] + "\",\"answer_option\":\"" + option.name.Split('_')[1] + "\"},";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTSlider":
                             var sliderScript = question.GetComponent<QTSlider>();
                             jsonString += "\"qType\":\"slider\"," 
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + sliderScript.answerRequired + "\","
                                           + "\"min_value\":\"" + sliderScript.minValue + "\","
                                           + "\"max_value\":\"" + sliderScript.maxValue + "\","
@@ -1104,82 +1050,82 @@ namespace QuestionnaireToolkit.Scripts
                                           + "\"show_panels\":\"" + sliderScript.showPanels + "\","
                                           + "\"show_intermediate_panels\":\"" + sliderScript.showIntermediatePanels + "\","
                                           + "\"auto_labels\":\"" + sliderScript.automaticLabelNames + "\","
-                                          + "\"label_zero\":" + JsonString(sliderScript.labelZero) + ","
-                                          + "\"label_quarter\":" + JsonString(sliderScript.labelQuarter) + ","
-                                          + "\"label_half\":" + JsonString(sliderScript.labelHalf) + ","
-                                          + "\"label_three_quarters\":" + JsonString(sliderScript.labelThreeQuarters) + ","
-                                          + "\"label_full\":" + JsonString(sliderScript.labelFull) + "},";
+                                          + "\"label_zero\":\"" + sliderScript.labelZero + "\","
+                                          + "\"label_quarter\":\"" + sliderScript.labelQuarter + "\","
+                                          + "\"label_half\":\"" + sliderScript.labelHalf + "\","
+                                          + "\"label_three_quarters\":\"" + sliderScript.labelThreeQuarters + "\","
+                                          + "\"label_full\":\"" + sliderScript.labelFull + "\"},";
                             break;
                         case "QTMultipleChoice":
                             jsonString += "\"qType\":\"multiple_choice\","
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTMultipleChoice>().answerRequired + "\","
                                           + "\"include_other_option\":\"" + question.GetComponent<QTMultipleChoice>().includeOtherOption + "\","
                                           + "\"options\":[";
                             foreach (var option in question.GetComponent<QTMultipleChoice>().options)
                             {
-                                jsonString += "{\"answer_value\":" + JsonString(GetExportOptionValue(option.name)) + ",\"answer_option\":" + JsonString(GetExportOptionText(option.name)) + "},";
+                                jsonString += "{\"answer_value\":\"" + option.name.Split('_')[0] + "\",\"answer_option\":\"" + option.name.Split('_')[1] + "\"},";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTTextInput":
                             jsonString += question.name.Contains("Short") ? "\"qType\":\"text_input_short\"," : "\"qType\":\"text_input_long\",";
-                            jsonString += "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                            jsonString += "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTTextInput>().answerRequired + "\","
-                                          + "\"placeholder_text\":" + JsonString(question.GetComponent<QTTextInput>().placeholderText) + "},";
+                                          + "\"placeholder_text\":\"" + question.GetComponent<QTTextInput>().placeholderText + "\"},";
                             break;
                         case "QTDropdown":
                             jsonString += "\"qType\":\"dropdown\","
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTDropdown>().answerRequired + "\","
                                           + "\"options\":[";
                             foreach (var option in question.GetComponent<QTDropdown>().options)
                             {
-                                jsonString += "{\"option_text\":" + JsonString(option.text) + "},";
+                                jsonString += "{\"option_text\":\"" + option.text + "\"},";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTCheckboxesGrid":
                             jsonString += "\"qType\":\"checkboxes_grid\","
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTCheckboxesGrid>().answerRequired + "\","
                                           + "\"row_texts\":[";
                             foreach (var rowText in question.GetComponent<QTCheckboxesGrid>().rowTexts)
                             {
-                                jsonString += JsonString(rowText) + ",";
+                                jsonString += "\"" + rowText + "\",";
                             }
                             jsonString = jsonString.Trim(',') + "]," + "\"column_texts\":[";
                             foreach (var columnText in question.GetComponent<QTCheckboxesGrid>().columnTexts)
                             {
-                                jsonString += JsonString(columnText) + ",";
+                                jsonString += "\"" + columnText + "\",";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTMultipleChoiceGrid":
                             jsonString += "\"qType\":\"multiple_choice_grid\","
-                                          + "\"question\":" + JsonString(question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text) + ","
-                                          + "\"header_name\":" + JsonString(GetQuestionHeaderName(question)) + ","
+                                          + "\"question\":\"" + question.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text + "\","
+                                          + "\"header_name\":\"" + GetQuestionHeaderName(question) + "\","
                                           + "\"mandatory\":\"" + question.GetComponent<QTMultipleChoiceGrid>().answerRequired + "\","
                                           + "\"row_texts\":[";
                             foreach (var rowText in question.GetComponent<QTMultipleChoiceGrid>().rowTexts)
                             {
-                                jsonString += JsonString(rowText) + ",";
+                                jsonString += "\"" + rowText + "\",";
                             }
                             jsonString = jsonString.Trim(',') + "]," + "\"column_texts\":[";
                             foreach (var columnText in question.GetComponent<QTMultipleChoiceGrid>().columnTexts)
                             {
-                                jsonString += JsonString(columnText) + ",";
+                                jsonString += "\"" + columnText + "\",";
                             }
                             jsonString = jsonString.Trim(',') + "]},";
                             break;
                         case "QTText":
                             var child = question.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
                             jsonString += "\"qType\":\"text\","
-                                          + "\"text_content\":" + JsonString(child.text) + ","
+                                          + "\"text_content\":\"" + child.text.Replace('"','\"') + "\","
                                           + "\"font_style\":\"" + child.fontStyle + "\","
                                           + "\"font_size\":\"" + child.fontSize + "\","
                                           + "\"auto_sizing\":\"" + child.enableAutoSizing + "\","
@@ -1198,7 +1144,7 @@ namespace QuestionnaireToolkit.Scripts
                             var imageName = "missing";
                             try { imageName = question.transform.GetChild(0).GetComponent<Image>().sprite.name; } catch (Exception) { }
                             jsonString += "\"qType\":\"image\","
-                                          + "\"image_name\":" + JsonString(imageName) + "},";
+                                          + "\"image_name\":\"" + imageName + "\"},";
                             break;
                         case "QTButton":
                             jsonString += "\"qType\":\"button\","
@@ -1208,7 +1154,7 @@ namespace QuestionnaireToolkit.Scripts
                             var videoName = "missing";
                             try { videoName = question.transform.GetChild(0).GetComponent<VideoPlayer>().clip.name; } catch (Exception) { }
                             jsonString += "\"qType\":\"video\","
-                                          + "\"video_name\":" + JsonString(videoName) + "},";
+                                          + "\"video_name\":\"" + videoName + "\"},";
                             break;
                     }
                 }
@@ -1409,11 +1355,8 @@ namespace QuestionnaireToolkit.Scripts
                 {
                     // Check for BO Manager and collect questionnaire answers even when results file writing is disabled.
                     // Use type lookup instead of tag lookup to avoid hard dependency on a specific scene tag.
-                    var optimizationBridge = GetOptimizationBridge();
-                    var shouldCollectForBo = optimizationBridge != null;
-                    var previousResponseId = currentResponseId;
-                    var previousRun = currentRun;
-                    var previousUserId = userId;
+                    var bomanager = FindObjectOfType<BoForUnityManager>();
+                    var shouldCollectForBo = bomanager != null;
 
                     if (generateResultsFile)
                     {
@@ -1438,20 +1381,7 @@ namespace QuestionnaireToolkit.Scripts
                     if (generateResultsFile || shouldCollectForBo)
                     {
                         finishedTimestamp = DateTime.UtcNow + "";
-                        if (!WriteResults())
-                        {
-                            currentResponseId = previousResponseId;
-                            currentRun = previousRun;
-                            userId = previousUserId;
-                            if (HasMetaDataAsset())
-                            {
-                                qtMetaData.currentResponseId = previousResponseId;
-                                qtMetaData.currentUserRun = previousRun;
-                            }
-                            ShowPage(_currentPage);
-                            SetPendingMessageVisibility(false, nameof(NextPage));
-                            return;
-                        }
+                        WriteResults();
                     }
 
                     ResetQuestionnaire();
@@ -1460,14 +1390,14 @@ namespace QuestionnaireToolkit.Scripts
                     onQuestionnaireFinished?.Invoke();
 
                     // check for BO Manager and start optimization as the questionnaire has finished
-                    if (optimizationBridge != null)
+                    if (bomanager != null)
                     {
-                        optimizationBridge.OptimizationStart();
+                        bomanager.OptimizationStart();
                         // In external-signal mode, queue progression so the manager advances
                         // once new parameters arrive from Python.
-                        if (optimizationBridge.UsesExternalIterationSignal)
+                        if (bomanager.iterationAdvanceMode == BoForUnityManager.IterationAdvanceMode.ExternalSignal)
                         {
-                            optimizationBridge.RequestNextIteration();
+                            bomanager.RequestNextIteration();
                         }
                     }
                 }
@@ -1590,12 +1520,16 @@ namespace QuestionnaireToolkit.Scripts
         }
 
         private static void TryAddBoObjectiveValue(
-            IQuestionnaireOptimizationBridge optimizationBridge,
+            BoForUnityManager boForUnity,
             string headerName,
             string rawValue,
             string sourceName)
         {
-            if (optimizationBridge == null)
+            if (boForUnity == null || boForUnity.optimizer == null)
+            {
+                return;
+            }
+            if (boForUnity.objectives == null || boForUnity.objectives.Count == 0)
             {
                 return;
             }
@@ -1606,7 +1540,78 @@ namespace QuestionnaireToolkit.Scripts
                 return;
             }
 
-            optimizationBridge.SubmitQuestionnaireObjectiveValue(headerName, rawValue, sourceName);
+            var headerMatchesObjective = false;
+            foreach (var objective in boForUnity.objectives)
+            {
+                var objectiveKey = objective?.key?.Trim();
+                if (objective != null &&
+                    !string.IsNullOrWhiteSpace(objectiveKey) &&
+                    ContainsObjectiveKeyMatch(headerName, objectiveKey))
+                {
+                    headerMatchesObjective = true;
+                    break;
+                }
+            }
+
+            if (!headerMatchesObjective)
+            {
+                return;
+            }
+
+            if (!float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+            {
+                Debug.LogWarning(
+                    $"Objective value for '{headerName}' from '{sourceName}' is not numeric ('{rawValue}'). " +
+                    "Submitting NaN so this iteration uses BO fallback handling instead of reusing a stale value."
+                );
+                boForUnity.optimizer.AddObjectiveValue(headerName, float.NaN);
+                return;
+            }
+
+            boForUnity.optimizer.AddObjectiveValue(headerName, value);
+        }
+
+        private static bool ContainsObjectiveKeyMatch(string source, string objectiveKey)
+        {
+            if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(objectiveKey))
+                return false;
+
+            int start = 0;
+            while (start < source.Length)
+            {
+                int idx = source.IndexOf(objectiveKey, start, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0)
+                    return false;
+
+                int end = idx + objectiveKey.Length;
+                if (IsObjectiveBoundary(source, idx) && IsObjectiveBoundary(source, end))
+                    return true;
+
+                start = idx + 1;
+            }
+
+            return false;
+        }
+
+        private static bool IsObjectiveBoundary(string text, int boundaryIndex)
+        {
+            if (boundaryIndex <= 0 || boundaryIndex >= text.Length)
+                return true;
+
+            char left = text[boundaryIndex - 1];
+            char right = text[boundaryIndex];
+            if (!char.IsLetterOrDigit(left) || !char.IsLetterOrDigit(right))
+                return true;
+
+            if (char.IsLetter(left) && char.IsLetter(right) && char.IsLower(left) && char.IsUpper(right))
+                return true;
+
+            if (char.IsLetter(left) && char.IsDigit(right))
+                return true;
+            if (char.IsDigit(left) && char.IsLetter(right))
+                return true;
+
+            return false;
         }
 
         private static string GetNameTokenOrDefault(string source, int tokenIndex, string fallback = "NULL")
@@ -1616,18 +1621,6 @@ namespace QuestionnaireToolkit.Scripts
                 return fallback;
             }
 
-            if (tokenIndex == 0)
-            {
-                var value = QTOptionNameUtility.GetValue(source);
-                return string.IsNullOrEmpty(value) ? fallback : value;
-            }
-
-            if (tokenIndex == 1)
-            {
-                var text = QTOptionNameUtility.GetText(source);
-                return string.IsNullOrEmpty(text) ? fallback : text;
-            }
-
             var tokens = source.Split('_');
             if (tokenIndex >= 0 && tokenIndex < tokens.Length && !string.IsNullOrEmpty(tokens[tokenIndex]))
             {
@@ -1635,16 +1628,6 @@ namespace QuestionnaireToolkit.Scripts
             }
 
             return fallback;
-        }
-
-        private static string GetExportOptionValue(string optionName)
-        {
-            return QTOptionNameUtility.GetValue(optionName);
-        }
-
-        private static string GetExportOptionText(string optionName)
-        {
-            return QTOptionNameUtility.GetText(optionName);
         }
 
         private static string GetQuestionHeaderFromObjectName(string objectName)
@@ -1700,197 +1683,14 @@ namespace QuestionnaireToolkit.Scripts
             return GetQuestionHeaderFromObjectName(question.name);
         }
 
-        private IQuestionnaireOptimizationBridge GetOptimizationBridge()
+        private BoForUnityManager GetBoForUnityManager()
         {
-            if (_cachedOptimizationBridge is MonoBehaviour cachedBehaviour &&
-                IsActiveSceneBridge(cachedBehaviour))
+            if (_cachedBoForUnityManager == null)
             {
-                return _cachedOptimizationBridge;
+                _cachedBoForUnityManager = FindObjectOfType<BoForUnityManager>();
             }
 
-            _cachedOptimizationBridge = null;
-            foreach (var behaviour in FindObjectsOfType<MonoBehaviour>())
-            {
-                if (IsActiveSceneBridge(behaviour) && behaviour is IQuestionnaireOptimizationBridge bridge)
-                {
-                    _cachedOptimizationBridge = bridge;
-                    return _cachedOptimizationBridge;
-                }
-            }
-
-            return null;
-        }
-
-        public void ResolveBoContextForLogging(out string resolvedUserId, out string resolvedConditionId, out string resolvedGroupId)
-        {
-            if (readBoContextFromManager && TryGetBoContextFromManager(out resolvedUserId, out resolvedConditionId, out resolvedGroupId))
-            {
-                resolvedUserId = ResolveReservedContextUserId(resolvedUserId);
-                return;
-            }
-
-            resolvedUserId = NormalizeContextValue(contextUserId);
-            resolvedConditionId = NormalizeContextValue(contextConditionId);
-            resolvedGroupId = NormalizeContextValue(contextGroupId);
-            resolvedUserId = ResolveReservedContextUserId(resolvedUserId);
-        }
-
-        private void EnsureBoContextAdditionalCsvItems()
-        {
-            if (!logBoContextColumns)
-                return;
-
-            if (additionalCsvItems == null)
-                additionalCsvItems = new ReorderableChildList();
-
-            EnsureAdditionalCsvItem("UserID", gameObject, nameof(QTQuestionnaireManager), nameof(BoContextUserIdForCsv), 0);
-            EnsureAdditionalCsvItem("ConditionID", gameObject, nameof(QTQuestionnaireManager), nameof(BoContextConditionIdForCsv), 1);
-            EnsureAdditionalCsvItem("GroupID", gameObject, nameof(QTQuestionnaireManager), nameof(BoContextGroupIdForCsv), 2);
-        }
-
-        public bool EnsureAdditionalCsvItem(
-            string headerName,
-            UnityEngine.Object target,
-            string componentName,
-            string memberName,
-            int preferredIndex)
-        {
-            if (string.IsNullOrWhiteSpace(headerName) ||
-                target == null ||
-                string.IsNullOrWhiteSpace(memberName))
-            {
-                return false;
-            }
-
-            if (additionalCsvItems == null)
-                additionalCsvItems = new ReorderableChildList();
-
-            AdditionalCsvItem item = null;
-            int currentIndex = -1;
-            for (int i = 0; i < additionalCsvItems.Count; i++)
-            {
-                AdditionalCsvItem candidate = additionalCsvItems[i];
-                if (candidate == null ||
-                    !string.Equals(candidate.headerName, headerName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                item = candidate;
-                currentIndex = i;
-                break;
-            }
-
-            if (item == null)
-            {
-                item = new AdditionalCsvItem();
-                int insertIndex = Mathf.Clamp(preferredIndex, 0, additionalCsvItems.Count);
-                additionalCsvItems.Insert(insertIndex, item);
-                currentIndex = insertIndex;
-                MarkAdditionalCsvItemsDirty();
-            }
-            else if (currentIndex > preferredIndex && preferredIndex >= 0)
-            {
-                additionalCsvItems.RemoveAt(currentIndex);
-                int insertIndex = Mathf.Clamp(preferredIndex, 0, additionalCsvItems.Count);
-                additionalCsvItems.Insert(insertIndex, item);
-                MarkAdditionalCsvItemsDirty();
-            }
-
-            bool changed = false;
-            if (!string.Equals(item.headerName, headerName, StringComparison.Ordinal))
-            {
-                item.headerName = headerName;
-                changed = true;
-            }
-
-            string normalizedComponentName = string.IsNullOrWhiteSpace(componentName) ? string.Empty : componentName.Trim();
-            if (item.itemValue == null ||
-                item.itemValue.target != target ||
-                !string.Equals(item.itemValue.component ?? string.Empty, normalizedComponentName, StringComparison.Ordinal) ||
-                !string.Equals(item.itemValue.name ?? string.Empty, memberName, StringComparison.Ordinal))
-            {
-                item.itemValue = new UnityMember
-                {
-                    target = target,
-                    component = normalizedComponentName,
-                    name = memberName
-                };
-                changed = true;
-            }
-
-            if (changed)
-                MarkAdditionalCsvItemsDirty();
-
-            return changed;
-        }
-
-        private void MarkAdditionalCsvItemsDirty()
-        {
-#if UNITY_EDITOR
-            if (Application.isPlaying)
-                return;
-
-            EditorUtility.SetDirty(this);
-            if (gameObject != null && gameObject.scene.IsValid())
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
-#endif
-        }
-
-        private bool TryGetBoContextFromManager(out string resolvedUserId, out string resolvedConditionId, out string resolvedGroupId)
-        {
-            resolvedUserId = null;
-            resolvedConditionId = null;
-            resolvedGroupId = null;
-
-            IQuestionnaireOptimizationBridge bridge = GetOptimizationBridge();
-            if (TryReadContextFromBridge(bridge, out resolvedUserId, out resolvedConditionId, out resolvedGroupId))
-                return true;
-
-            foreach (var behaviour in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
-            {
-                if (!IsActiveSceneBridge(behaviour))
-                    continue;
-
-                if (behaviour is IQuestionnaireOptimizationBridge candidate &&
-                    TryReadContextFromBridge(candidate, out resolvedUserId, out resolvedConditionId, out resolvedGroupId))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool IsActiveSceneBridge(MonoBehaviour behaviour)
-        {
-            return behaviour != null &&
-                   behaviour.gameObject != null &&
-                   behaviour.gameObject.scene.IsValid() &&
-                   behaviour.isActiveAndEnabled;
-        }
-
-        private static bool TryReadContextFromBridge(
-            IQuestionnaireOptimizationBridge bridge,
-            out string resolvedUserId,
-            out string resolvedConditionId,
-            out string resolvedGroupId)
-        {
-            resolvedUserId = null;
-            resolvedConditionId = null;
-            resolvedGroupId = null;
-            if (bridge == null)
-                return false;
-
-            resolvedUserId = NormalizeContextValue(bridge.UserId);
-            resolvedConditionId = NormalizeContextValue(bridge.ConditionId);
-            resolvedGroupId = NormalizeContextValue(bridge.GroupId);
-            return true;
-        }
-
-        private static string NormalizeContextValue(string value)
-        {
-            return string.IsNullOrWhiteSpace(value) ? "-1" : value.Trim();
+            return _cachedBoForUnityManager;
         }
 
         private string BuildPriorRatingHintKey(GameObject question)
@@ -1916,9 +1716,9 @@ namespace QuestionnaireToolkit.Scripts
                    questionIndex.ToString(CultureInfo.InvariantCulture) + "::" + headerToken;
         }
 
-        private void TryStorePriorSliderRatingHint(IQuestionnaireOptimizationBridge optimizationBridge, GameObject question, string rawValue)
+        private void TryStorePriorSliderRatingHint(BoForUnityManager boForUnity, GameObject question, string rawValue)
         {
-            if (optimizationBridge == null || question == null)
+            if (boForUnity == null || question == null)
                 return;
 
             if (!float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float sliderValue))
@@ -1931,24 +1731,24 @@ namespace QuestionnaireToolkit.Scripts
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            optimizationBridge.SetPriorSliderRatingHint(key, sliderValue);
+            boForUnity.SetPriorSliderRatingHint(key, sliderValue);
         }
 
-        private void TryClearPriorSliderRatingHint(IQuestionnaireOptimizationBridge optimizationBridge, GameObject question)
+        private void TryClearPriorSliderRatingHint(BoForUnityManager boForUnity, GameObject question)
         {
-            if (optimizationBridge == null || question == null)
+            if (boForUnity == null || question == null)
                 return;
 
             string key = BuildPriorRatingHintKey(question);
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            optimizationBridge.RemovePriorSliderRatingHint(key);
+            boForUnity.RemovePriorSliderRatingHint(key);
         }
 
-        private void TryStorePriorLinearScaleRatingHint(IQuestionnaireOptimizationBridge optimizationBridge, GameObject question, string rawValue)
+        private void TryStorePriorLinearScaleRatingHint(BoForUnityManager boForUnity, GameObject question, string rawValue)
         {
-            if (optimizationBridge == null || question == null)
+            if (boForUnity == null || question == null)
                 return;
 
             if (string.IsNullOrWhiteSpace(rawValue) || string.Equals(rawValue, "NULL", StringComparison.OrdinalIgnoreCase))
@@ -1958,19 +1758,19 @@ namespace QuestionnaireToolkit.Scripts
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            optimizationBridge.SetPriorLinearScaleRatingHint(key, rawValue.Trim());
+            boForUnity.SetPriorLinearScaleRatingHint(key, rawValue.Trim());
         }
 
-        private void TryClearPriorLinearScaleRatingHint(IQuestionnaireOptimizationBridge optimizationBridge, GameObject question)
+        private void TryClearPriorLinearScaleRatingHint(BoForUnityManager boForUnity, GameObject question)
         {
-            if (optimizationBridge == null || question == null)
+            if (boForUnity == null || question == null)
                 return;
 
             string key = BuildPriorRatingHintKey(question);
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
-            optimizationBridge.RemovePriorLinearScaleRatingHint(key);
+            boForUnity.RemovePriorLinearScaleRatingHint(key);
         }
 
         private void ApplyPriorSliderRatingHint(GameObject question, QTSlider sliderQuestion)
@@ -1978,15 +1778,15 @@ namespace QuestionnaireToolkit.Scripts
             if (sliderQuestion == null)
                 return;
 
-            var optimizationBridge = GetOptimizationBridge();
-            if (optimizationBridge == null || !optimizationBridge.EnablePriorRatingHints)
+            BoForUnityManager boForUnity = GetBoForUnityManager();
+            if (boForUnity == null || !boForUnity.enablePriorSliderRatingHint)
             {
                 sliderQuestion.HidePriorRatingHint();
                 return;
             }
 
             string key = BuildPriorRatingHintKey(question);
-            if (!optimizationBridge.TryGetPriorSliderRatingHint(key, out float priorValue))
+            if (!boForUnity.TryGetPriorSliderRatingHint(key, out float priorValue))
             {
                 sliderQuestion.HidePriorRatingHint();
                 return;
@@ -1995,7 +1795,7 @@ namespace QuestionnaireToolkit.Scripts
             sliderQuestion.ApplyPriorRatingHint(
                 enabled: true,
                 priorValue: priorValue,
-                alpha: optimizationBridge.PriorRatingHintAlpha
+                alpha: boForUnity.priorSliderRatingHintAlpha
             );
         }
 
@@ -2004,15 +1804,15 @@ namespace QuestionnaireToolkit.Scripts
             if (linearScaleQuestion == null)
                 return;
 
-            var optimizationBridge = GetOptimizationBridge();
-            if (optimizationBridge == null || !optimizationBridge.EnablePriorRatingHints)
+            BoForUnityManager boForUnity = GetBoForUnityManager();
+            if (boForUnity == null || !boForUnity.enablePriorSliderRatingHint)
             {
                 linearScaleQuestion.HidePriorRatingHint();
                 return;
             }
 
             string key = BuildPriorRatingHintKey(question);
-            if (!optimizationBridge.TryGetPriorLinearScaleRatingHint(key, out string priorValue))
+            if (!boForUnity.TryGetPriorLinearScaleRatingHint(key, out string priorValue))
             {
                 linearScaleQuestion.HidePriorRatingHint();
                 return;
@@ -2021,7 +1821,7 @@ namespace QuestionnaireToolkit.Scripts
             linearScaleQuestion.ApplyPriorRatingHint(
                 enabled: true,
                 priorAnswerValue: priorValue,
-                alpha: optimizationBridge.PriorRatingHintAlpha
+                alpha: boForUnity.priorSliderRatingHintAlpha
             );
         }
 
@@ -2115,68 +1915,17 @@ namespace QuestionnaireToolkit.Scripts
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
 
-        private static string JsonString(string value)
-        {
-            if (value == null)
-                value = string.Empty;
-
-            var sb = new StringBuilder(value.Length + 2);
-            sb.Append('"');
-            foreach (char c in value)
-            {
-                switch (c)
-                {
-                    case '"':
-                        sb.Append("\\\"");
-                        break;
-                    case '\\':
-                        sb.Append("\\\\");
-                        break;
-                    case '\b':
-                        sb.Append("\\b");
-                        break;
-                    case '\f':
-                        sb.Append("\\f");
-                        break;
-                    case '\n':
-                        sb.Append("\\n");
-                        break;
-                    case '\r':
-                        sb.Append("\\r");
-                        break;
-                    case '\t':
-                        sb.Append("\\t");
-                        break;
-                    default:
-                        if (char.IsControl(c))
-                            sb.Append("\\u").Append(((int)c).ToString("x4", CultureInfo.InvariantCulture));
-                        else
-                            sb.Append(c);
-                        break;
-                }
-            }
-            sb.Append('"');
-            return sb.ToString();
-        }
-
-        private class BoObjectiveSubmission
-        {
-            public string HeaderName;
-            public string RawValue;
-            public string SourceName;
-        }
-
         /// <summary>
         /// Writes the results of the current questionnaire run in the specified results file.
         /// </summary>
-        private bool WriteResults()
+        private void WriteResults()
         {
-            EnsureBoContextAdditionalCsvItems();
-
             var rowCells = new List<string> { currentResponseId.ToString(CultureInfo.InvariantCulture) };
             if (customUserId)
             {
                 rowCells.Add(userId);
+                if (generateResultsFile && runsPerUser == 1)
+                    userId = "";
             }
             if (runsPerUser > 1)
             {
@@ -2193,13 +1942,14 @@ namespace QuestionnaireToolkit.Scripts
 
             //-----------
             // Check if BO for Unity Manager is present in the scene
-            var optimizationBridge = GetOptimizationBridge();
-            var boManager = optimizationBridge != null;
+            var boManager = false;
+            var boForUnity = FindObjectOfType<BoForUnityManager>();
+            if (boForUnity != null)
+            {
+                boManager = true;
+            }
             HashSet<string> boHeadersUsed = boManager
                 ? new HashSet<string>(StringComparer.Ordinal)
-                : null;
-            var boObjectiveSubmissions = boManager
-                ? new List<BoObjectiveSubmission>()
                 : null;
             //-----------
             
@@ -2239,11 +1989,11 @@ namespace QuestionnaireToolkit.Scripts
                             AppendEmittedValue(emittedValues, emittedHeaders, currVal, questionHeader, boHeadersUsed);
                             if (!string.Equals(currVal, "NULL", StringComparison.OrdinalIgnoreCase))
                             {
-                                TryStorePriorLinearScaleRatingHint(optimizationBridge, question, currVal);
+                                TryStorePriorLinearScaleRatingHint(boForUnity, question, currVal);
                             }
                             else
                             {
-                                TryClearPriorLinearScaleRatingHint(optimizationBridge, question);
+                                TryClearPriorLinearScaleRatingHint(boForUnity, question);
                             }
                             break;
                         case "QTCheckboxes":
@@ -2282,11 +2032,11 @@ namespace QuestionnaireToolkit.Scripts
                             AppendEmittedValue(emittedValues, emittedHeaders, currVal, questionHeader, boHeadersUsed);
                             if (!string.Equals(currVal, "NULL", StringComparison.OrdinalIgnoreCase))
                             {
-                                TryStorePriorSliderRatingHint(optimizationBridge, question, currVal);
+                                TryStorePriorSliderRatingHint(boForUnity, question, currVal);
                             }
                             else
                             {
-                                TryClearPriorSliderRatingHint(optimizationBridge, question);
+                                TryClearPriorSliderRatingHint(boForUnity, question);
                             }
                             break;
                         case "QTMultipleChoice":
@@ -2454,12 +2204,12 @@ namespace QuestionnaireToolkit.Scripts
                         {
                             string objectiveHeader = i < emittedHeaders.Count ? emittedHeaders[i] : questionHeader;
                             objectiveHeader = ResolveObjectiveHeaderName(objectiveHeader, emittedQuestionValueCount);
-                            boObjectiveSubmissions.Add(new BoObjectiveSubmission
-                            {
-                                HeaderName = objectiveHeader,
-                                RawValue = emittedValues[i],
-                                SourceName = question.name
-                            });
+                            TryAddBoObjectiveValue(
+                                boForUnity,
+                                objectiveHeader,
+                                emittedValues[i],
+                                question.name
+                            );
                             emittedQuestionValueCount++;
                         }
                     }
@@ -2470,9 +2220,6 @@ namespace QuestionnaireToolkit.Scripts
             {
                 foreach (var aci in additionalCsvItems)
                 {
-                    if (IsEmptyAdditionalCsvItem(aci))
-                        continue;
-
                     if (aci == null)
                     {
                         Debug.LogWarning("Skipping null entry in additionalCsvItems while writing questionnaire results.");
@@ -2491,202 +2238,32 @@ namespace QuestionnaireToolkit.Scripts
                 }
             }
 
-            if (generateResultsFile)
+            try
             {
-                try
+                if (generateResultsFile)
                 {
-                    string directory = Path.GetDirectoryName(userPath);
-                    if (!string.IsNullOrEmpty(directory))
-                        Directory.CreateDirectory(directory);
-
                     using (var writer = new StreamWriter(userPath, true))
                     {
                         writer.WriteLine(string.Join(",", rowCells.Select(EscapeCsvCell)));
                     }
                     Debug.Log("Write results for: " + resultsFileName + (newFileEachStart ? "_" + currentResponseId : "") +
                               (runsPerUser > 1 ? " run: " + currentRun : "") + ".\n@ " + userPath);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Write results failed for '{userPath}': {ex.Message}");
-                    return false;
-                }
-
-                if (currentRun == runsPerUser)
-                {
-                    if (HasMetaDataAsset())
+                    if (currentRun == runsPerUser)
                     {
-                        qtMetaData.currentUserRun = 0;
+                        if (HasMetaDataAsset())
+                        {
+                            qtMetaData.currentUserRun = 0;
+                        }
+                        currentRun = 0;
+                        userId = "";
                     }
-                    currentRun = 0;
-                    userId = "";
-                }
-
-                try
-                {
                     SaveMetaData(currentResponseId, currentRun);
                 }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Results were written, but questionnaire metadata could not be saved: {ex.Message}");
-                }
-
-                if (customUserId && runsPerUser == 1)
-                    userId = "";
             }
-
-            if (boObjectiveSubmissions != null)
+            catch (Exception)
             {
-                foreach (var submission in boObjectiveSubmissions)
-                {
-                    TryAddBoObjectiveValue(
-                        optimizationBridge,
-                        submission.HeaderName,
-                        submission.RawValue,
-                        submission.SourceName
-                    );
-                }
+                Debug.Log("Write results failed!");
             }
-
-            return true;
-        }
-
-        private string ResolveBoContextResultsDirectory(string baseDirectory)
-        {
-            string resolvedUserId = null;
-            string resolvedConditionId = null;
-            string resolvedGroupId = null;
-            bool resolvedFromBridge = readBoContextFromManager &&
-                                      TryGetBoContextFromManager(
-                                          out resolvedUserId,
-                                          out resolvedConditionId,
-                                          out resolvedGroupId);
-            if (!resolvedFromBridge)
-            {
-                resolvedUserId = NormalizeContextValue(contextUserId);
-                resolvedConditionId = NormalizeContextValue(contextConditionId);
-                resolvedGroupId = NormalizeContextValue(contextGroupId);
-            }
-
-            resolvedUserId = ResolveUniqueContextUserFolder(
-                baseDirectory,
-                resolvedUserId,
-                resolvedConditionId,
-                resolvedFromBridge
-            );
-            if (!resolvedFromBridge)
-                contextUserId = resolvedUserId;
-
-            return Path.Combine(
-                baseDirectory,
-                NormalizeLogFolderToken(resolvedUserId),
-                NormalizeLogFolderToken(resolvedConditionId)
-            );
-        }
-
-        private string ResolveUniqueContextUserFolder(
-            string baseDirectory,
-            string requestedUserId,
-            string conditionId,
-            bool allowExistingRequestedUserFolder)
-        {
-            string normalizedRoot = Path.GetFullPath(baseDirectory);
-            string normalizedRequestedUserId = NormalizeLogFolderToken(requestedUserId);
-            string normalizedConditionId = NormalizeLogFolderToken(conditionId);
-
-            if (_contextUserFolderReserved &&
-                string.Equals(_contextUserFolderRoot, normalizedRoot, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(_contextRequestedUserId, normalizedRequestedUserId, StringComparison.Ordinal) &&
-                string.Equals(_contextRequestedConditionId, normalizedConditionId, StringComparison.Ordinal))
-            {
-                return _contextResolvedUserId;
-            }
-
-            _contextResolvedUserId = LogDataFolderUtility.GetOrCreateUserFolderTokenForCondition(
-                normalizedRoot,
-                normalizedRequestedUserId,
-                normalizedConditionId,
-                allowExistingRequestedUserFolder,
-                allowExistingRequestedUserFolder
-            );
-            _contextUserFolderRoot = normalizedRoot;
-            _contextRequestedUserId = normalizedRequestedUserId;
-            _contextRequestedConditionId = normalizedConditionId;
-            _contextUserFolderReserved = true;
-
-            if (!string.Equals(normalizedRequestedUserId, _contextResolvedUserId, StringComparison.Ordinal))
-            {
-                Debug.Log(
-                    $"{nameof(QTQuestionnaireManager)}: user log folder '{normalizedRequestedUserId}' already exists. " +
-                    $"Using '{_contextResolvedUserId}' for this questionnaire run."
-                );
-            }
-
-            return _contextResolvedUserId;
-        }
-
-        private string ResolveReservedContextUserId(string requestedUserId)
-        {
-            if (!_contextUserFolderReserved)
-                return requestedUserId;
-
-            string normalizedRequestedUserId = NormalizeLogFolderToken(requestedUserId);
-            if (string.Equals(normalizedRequestedUserId, _contextRequestedUserId, StringComparison.Ordinal) ||
-                string.Equals(normalizedRequestedUserId, _contextResolvedUserId, StringComparison.Ordinal))
-            {
-                return _contextResolvedUserId;
-            }
-
-            return requestedUserId;
-        }
-
-        private static string ResolveResultsDirectory(string configuredPath)
-        {
-            string path = string.IsNullOrWhiteSpace(configuredPath)
-                ? "Assets/StreamingAssets/BOData/LogData/"
-                : configuredPath.Trim();
-
-            path = path.Replace('\\', Path.DirectorySeparatorChar)
-                       .Replace('/', Path.DirectorySeparatorChar);
-
-            if (Path.IsPathRooted(path))
-                return path;
-
-            string streamingAssetsPrefix = "Assets" + Path.DirectorySeparatorChar + "StreamingAssets";
-            if (path.Equals(streamingAssetsPrefix, StringComparison.OrdinalIgnoreCase))
-                return Application.streamingAssetsPath;
-
-            string streamingAssetsNestedPrefix = streamingAssetsPrefix + Path.DirectorySeparatorChar;
-            if (path.StartsWith(streamingAssetsNestedPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                string relativeToStreamingAssets = path.Substring(streamingAssetsNestedPrefix.Length);
-                return Path.Combine(Application.streamingAssetsPath, relativeToStreamingAssets);
-            }
-
-            string assetsPrefix = "Assets" + Path.DirectorySeparatorChar;
-            if (path.Equals("Assets", StringComparison.OrdinalIgnoreCase))
-                return Application.dataPath;
-
-            if (path.StartsWith(assetsPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
-                if (!string.IsNullOrWhiteSpace(projectRoot))
-                    return Path.Combine(projectRoot, path);
-            }
-
-            return Path.Combine(Application.persistentDataPath, path);
-        }
-
-        private static string NormalizeLogFolderToken(string value)
-        {
-            return LogDataFolderUtility.NormalizeLogFolderToken(value);
-        }
-
-        private static bool IsEmptyAdditionalCsvItem(AdditionalCsvItem item)
-        {
-            return item != null &&
-                   string.IsNullOrWhiteSpace(item.headerName) &&
-                   (item.itemValue == null || !item.itemValue.isAssigned);
         }
 
         /// <summary>

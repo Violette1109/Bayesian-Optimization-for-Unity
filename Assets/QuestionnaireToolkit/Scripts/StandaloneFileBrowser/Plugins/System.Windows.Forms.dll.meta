@@ -55,7 +55,6 @@ PluginImporter:
         enabled: 1
         settings:
           DefaultValueInitialized: true
-          OS: Windows
     data:
       first:
         Facebook: Win

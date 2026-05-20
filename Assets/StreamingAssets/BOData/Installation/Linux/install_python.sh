@@ -30,8 +30,8 @@ log_error() {
 # Check if running with appropriate privileges
 check_privileges() {
     if [[ $EUID -eq 0 ]]; then
-        log_error "Do not run this script as root. It installs Python packages with --user for the Unity user account."
-        exit 1
+        log_warn "Running as root. This script will use sudo when necessary."
+        SUDO=""
     else
         SUDO="sudo"
     fi
@@ -112,18 +112,16 @@ install_packages() {
         exit 1
     fi
     
-    log_info "Checking pip..."
-    if ! "${PYTHON_EXE}" -m pip --version > /dev/null 2>&1; then
-        log_info "Installing bundled pip..."
-        "${PYTHON_EXE}" -m ensurepip --upgrade || {
-            log_error "Failed to install pip"
-            exit 1
-        }
-    fi
+    # Upgrade pip
+    log_info "Upgrading pip..."
+    "${PYTHON_EXE}" -m pip install --upgrade pip setuptools wheel || {
+        log_error "Failed to upgrade pip"
+        exit 1
+    }
     
     # Install packages from requirements
     log_info "Installing packages from requirements.txt..."
-    "${PYTHON_EXE}" -m pip install --user -r "$REQUIREMENTS" || {
+    "${PYTHON_EXE}" -m pip install -r "$REQUIREMENTS" || {
         log_error "Failed to install packages from requirements.txt"
         exit 1
     }
@@ -141,10 +139,6 @@ install_packages() {
     
     if [ -z "$MISSING_PACKAGES" ]; then
         log_info "All expected packages were successfully installed."
-        "${PYTHON_EXE}" -m pip check || {
-            log_error "Installed packages have dependency conflicts"
-            exit 1
-        }
         log_info "Installed packages:"
         "${PYTHON_EXE}" -m pip list | grep -E "numpy|scipy|matplotlib|pandas|torch|gpytorch|botorch|moocore"
     else

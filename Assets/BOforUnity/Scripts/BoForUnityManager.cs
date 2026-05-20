@@ -18,7 +18,7 @@ using PythonStarter = BOforUnity.Scripts.PythonStarter;
 
 namespace BOforUnity
 {
-    public class BoForUnityManager : MonoBehaviour, IQuestionnaireOptimizationBridge
+    public class BoForUnityManager : MonoBehaviour
     {
         public enum IterationAdvanceMode
         {
@@ -115,7 +115,6 @@ namespace BOforUnity
         public string groupId = "-1";
 
         public bool hasNewDesignParameterValues;
-        private bool _runtimeUserFolderReserved = false;
         private bool _pendingAdvanceRequest = false;
         private bool _loopTerminated = false;
         private Coroutine _automaticAdvanceCoroutine = null;
@@ -168,7 +167,6 @@ namespace BOforUnity
         
         void Start()
         {
-            EnsureUniqueRuntimeUserFolder();
             EnsureNextButtonListener();
             SetLoadingVisible(true);
             SetNextButtonVisible(false);
@@ -398,36 +396,13 @@ namespace BOforUnity
             optimizationRunning = false;
             simulationRunning = false;
 
-            if (!string.IsNullOrWhiteSpace(nextButtonText))
-                SetNextButtonText(nextButtonText);
-
-            // External-signal flows may already have queued the next transition while
-            // Python was optimizing. Consume that ready state without flashing the
-            // manual ready/Next UI for a frame.
-            if (!forceManualAdvance &&
-                iterationAdvanceMode == IterationAdvanceMode.ExternalSignal &&
-                currentIteration == 1)
-            {
-                _pendingAdvanceRequest = true;
-            }
-
-            if (!forceManualAdvance &&
-                iterationAdvanceMode == IterationAdvanceMode.ExternalSignal &&
-                _pendingAdvanceRequest)
-            {
-                SetNextButtonVisible(false);
-                SetLoadingVisible(false);
-                SetOptimizerStatePanelVisible(false);
-                SetOutputText(statusText);
-                TryConsumeAdvanceRequest();
-                return;
-            }
-
-            SetNextButtonVisible(false);
-            SetLoadingVisible(false);
-            SetOutputText(statusText);
             // Keep the status panel visible only when the ready-state UI lives inside it.
             SetOptimizerStatePanelVisible(RequiresOptimizerPanelForReadyStateUi(forceManualAdvance));
+            SetLoadingVisible(false);
+            SetOutputText(statusText);
+
+            if (!string.IsNullOrWhiteSpace(nextButtonText))
+                SetNextButtonText(nextButtonText);
 
             if (forceManualAdvance)
             {
@@ -463,6 +438,13 @@ namespace BOforUnity
                     SetNextButtonVisible(false);
                     ScheduleAutomaticAdvance();
                     break;
+            }
+
+            // External-signal mode can otherwise stall before the very first evaluation
+            // when no UI button exists. Auto-kick only the initial transition.
+            if (iterationAdvanceMode == IterationAdvanceMode.ExternalSignal && currentIteration == 1)
+            {
+                _pendingAdvanceRequest = true;
             }
 
             // If an external signal was sent early while Python was still computing, honor it now.
@@ -1142,7 +1124,6 @@ namespace BOforUnity
                     );
                     return fallback;
                 }
-
                 sum += v;
             }
 
@@ -1199,64 +1180,9 @@ namespace BOforUnity
             return !float.IsNaN(value) && !float.IsInfinity(value);
         }
 
-        private void EnsureUniqueRuntimeUserFolder()
-        {
-            if (_runtimeUserFolderReserved)
-                return;
-
-            string requestedUserId = userId;
-            string normalizedRequestedUserId = LogDataFolderUtility.NormalizeLogFolderToken(requestedUserId);
-            userId = LogDataFolderUtility.GetOrCreateUserFolderTokenForCondition(
-                LogDataFolderUtility.StreamingAssetsLogRoot,
-                requestedUserId,
-                conditionId
-            );
-            _runtimeUserFolderReserved = true;
-
-            if (!string.Equals(normalizedRequestedUserId, userId, StringComparison.Ordinal))
-            {
-                Debug.Log(
-                    $"BOforUnity: user log folder '{normalizedRequestedUserId}' already exists. " +
-                    $"Using '{userId}' for this run."
-                );
-            }
-        }
-
         public void ClearPriorSliderRatingHints()
         {
             _priorSliderRatingHints.Clear();
-        }
-
-        public bool UsesExternalIterationSignal => iterationAdvanceMode == IterationAdvanceMode.ExternalSignal;
-
-        public bool EnablePriorRatingHints => enablePriorSliderRatingHint;
-
-        public float PriorRatingHintAlpha => priorSliderRatingHintAlpha;
-
-        public string UserId => userId;
-
-        public string ConditionId => conditionId;
-
-        public string GroupId => groupId;
-
-        public void SubmitQuestionnaireObjectiveValue(string headerName, string rawValue, string sourceName)
-        {
-            if (optimizer == null || !optimizer.HasObjectiveMatch(headerName))
-            {
-                return;
-            }
-
-            if (!float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
-            {
-                Debug.LogWarning(
-                    $"Objective value for '{headerName}' from '{sourceName}' is not numeric ('{rawValue}'). " +
-                    "Submitting NaN so this iteration uses BO fallback handling instead of reusing a stale value."
-                );
-                optimizer.AddObjectiveValue(headerName, float.NaN);
-                return;
-            }
-
-            optimizer.AddObjectiveValue(headerName, value);
         }
 
         public void SetPriorSliderRatingHint(string questionKey, float sliderValue)
@@ -1323,23 +1249,13 @@ namespace BOforUnity
 
         private string[] GetFinalDesignLogRootCandidates()
         {
-            // Current runtime location used by Python process log environment.
+            // Current runtime location used by Python process working directory.
             string current = Path.Combine(
-                Application.streamingAssetsPath,
+                Application.dataPath,
+                "StreamingAssets",
                 "BOData",
                 "LogData"
             );
-
-            string persistentDataPathCurrent = Path.Combine(
-                Application.persistentDataPath,
-                "BOData",
-                "LogData"
-            );
-
-            string userFolder = NormalizeLogFolderToken(userId);
-            string conditionFolder = NormalizeLogFolderToken(conditionId);
-            string currentCondition = Path.Combine(current, userFolder, conditionFolder);
-            string persistentDataPathCondition = Path.Combine(persistentDataPathCurrent, userFolder, conditionFolder);
 
             // Legacy location from earlier versions / docs.
             string legacy = Path.Combine(
@@ -1352,7 +1268,8 @@ namespace BOforUnity
 
             // CABOP stores runs under dedicated subfolders to keep metrics/logs separate.
             string cabopSingle = Path.Combine(
-                Application.streamingAssetsPath,
+                Application.dataPath,
+                "StreamingAssets",
                 "BOData",
                 "LogData",
                 "CABOP",
@@ -1360,23 +1277,8 @@ namespace BOforUnity
             );
 
             string cabopMulti = Path.Combine(
-                Application.streamingAssetsPath,
-                "BOData",
-                "LogData",
-                "CABOP",
-                "multi"
-            );
-
-            string persistentDataPathCabopSingle = Path.Combine(
-                Application.persistentDataPath,
-                "BOData",
-                "LogData",
-                "CABOP",
-                "single"
-            );
-
-            string persistentDataPathCabopMulti = Path.Combine(
-                Application.persistentDataPath,
+                Application.dataPath,
+                "StreamingAssets",
                 "BOData",
                 "LogData",
                 "CABOP",
@@ -1403,54 +1305,29 @@ namespace BOforUnity
                 "multi"
             );
 
-            string conditionCabopSingle = Path.Combine(currentCondition, "CABOP", "single");
-            string conditionCabopMulti = Path.Combine(currentCondition, "CABOP", "multi");
-            string persistentDataPathConditionCabopSingle = Path.Combine(persistentDataPathCondition, "CABOP", "single");
-            string persistentDataPathConditionCabopMulti = Path.Combine(persistentDataPathCondition, "CABOP", "multi");
-
             var ordered = new List<string>();
             if (optimizerBackend == OptimizerBackend.CABOP)
             {
                 if (cabopObjectiveMode == CabopObjectiveMode.SingleObjective)
                 {
-                    ordered.Add(conditionCabopSingle);
-                    ordered.Add(persistentDataPathConditionCabopSingle);
                     ordered.Add(cabopSingle);
-                    ordered.Add(persistentDataPathCabopSingle);
                     ordered.Add(cabopLegacySingle);
                 }
                 else
                 {
-                    ordered.Add(conditionCabopMulti);
-                    ordered.Add(persistentDataPathConditionCabopMulti);
                     ordered.Add(cabopMulti);
-                    ordered.Add(persistentDataPathCabopMulti);
                     ordered.Add(cabopLegacyMulti);
                 }
             }
 
-            ordered.Add(currentCondition);
-            ordered.Add(persistentDataPathCondition);
             ordered.Add(current);
-            ordered.Add(persistentDataPathCurrent);
             ordered.Add(legacy);
-            ordered.Add(conditionCabopSingle);
-            ordered.Add(conditionCabopMulti);
-            ordered.Add(persistentDataPathConditionCabopSingle);
-            ordered.Add(persistentDataPathConditionCabopMulti);
             ordered.Add(cabopSingle);
             ordered.Add(cabopMulti);
-            ordered.Add(persistentDataPathCabopSingle);
-            ordered.Add(persistentDataPathCabopMulti);
             ordered.Add(cabopLegacySingle);
             ordered.Add(cabopLegacyMulti);
 
             return ordered.Distinct().ToArray();
-        }
-
-        private static string NormalizeLogFolderToken(string value)
-        {
-            return LogDataFolderUtility.NormalizeLogFolderToken(value);
         }
         
         private bool IsPerfectRating()
