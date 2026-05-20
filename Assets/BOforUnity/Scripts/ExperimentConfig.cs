@@ -1,9 +1,26 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using BOforUnity;
 
 public class ExperimentConfig : MonoBehaviour
 {
+    // ─────────────────────────────────────────────
+    // User ID Panel UI
+    // ─────────────────────────────────────────────
+    [Header("User ID Panel UI")]
+    [Tooltip("在 Config Panel 前先顯示的 User ID 輸入面板")]
+    public GameObject userIdPanel;
+
+    [Tooltip("讓實驗者輸入 ID 的 TMP_InputField")]
+    public TMP_InputField userIdInputField;
+
+    [Tooltip("User ID 面板上的 Continue 按鈕")]
+    public Button userIdContinueBtn;
+
+    // ─────────────────────────────────────────────
+    // Config Panel UI
+    // ─────────────────────────────────────────────
     [Header("Config Panel UI")]
     public GameObject configPanel;
     public Button scale5Btn;
@@ -12,89 +29,181 @@ public class ExperimentConfig : MonoBehaviour
     public Button rounds10Btn;
     public Button rounds15Btn;
     public Toggle warmStartToggle;
+    
+    // Pascal v1.4.2 隨機組分配開關
+    public Toggle randomAllocationToggle;
     public Button startBtn;
 
-    [Header("References")]
-    public Slider likertSlider;
+    // ─────────────────────────────────────────────
+    // Data-Driven References
+    // ─────────────────────────────────────────────
+    [Header("Dynamic References (Data-Driven)")]
+    [Tooltip("直接拖入受試者評分用的 Slider，不再用名字字串去撈")]
+    public Slider evaluationSlider;
+
+    [Tooltip("請輸入妳在 BoManager 裡設定的問卷 Objective Key (例: mental_demand)")]
+    public string targetObjectiveKey = "mental_demand";
+
+    [Tooltip("當選擇 10 輪 Sampling 時，對應的 Optimization 輪數")]
+    public int optimizationRoundsFor10 = 5;
+
+    [Tooltip("當選擇 15 輪 Sampling 時，對應的 Optimization 輪數")]
+    public int optimizationRoundsFor15 = 0;
+
+    [Header("Manager References")]
     public BoForUnityManager boManager;
 
     private readonly Color _selectedColor = new Color(0.498f, 0.467f, 0.867f);
-    private readonly Color _defaultColor = new Color(0.9f, 0.9f, 0.9f);
+    private readonly Color _defaultColor  = new Color(0.9f, 0.9f, 0.9f);
 
-    private static int _likertMax = 5;
-    private static int _samplingRounds = 10;
-    private static bool _warmStart = false;
-    private static bool _experimentStarted = false;
+    private static int    _likertMax         = 5;
+    private static int    _samplingRounds    = 10;
+    private static bool   _warmStart         = false;
+    private static bool   _randomAllocation  = false;
+    private static bool   _experimentStarted = false;
+    private static string _userId            = ""; // 直接儲存原始輸入
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
     {
-        _likertMax = 5;
-        _samplingRounds = 10;
-        _warmStart = false;
+        _likertMax         = 5;
+        _samplingRounds    = 10;
+        _warmStart         = false;
+        _randomAllocation  = false;
         _experimentStarted = false;
+        _userId            = ""; 
     }
 
+    // ─────────────────────────────────────────────
+    // Awake
+    // ─────────────────────────────────────────────
     void Awake()
     {
         if (!_experimentStarted)
         {
-            configPanel.SetActive(true);
+            // 先顯示 User ID Panel，其餘全隱藏
+            userIdPanel.SetActive(true);
+            configPanel.SetActive(false);
             boManager.welcomePanel.SetActive(false);
             boManager.nextButton.SetActive(false);
 
-            // 暂停 Python，等用户选完参数再启动
             if (boManager.pythonStarter != null)
                 boManager.pythonStarter.enabled = false;
         }
         else
         {
+            userIdPanel.SetActive(false);
             configPanel.SetActive(false);
             ApplyConfig();
         }
     }
 
+    // ─────────────────────────────────────────────
+    // Start
+    // ─────────────────────────────────────────────
     void Start()
     {
         if (_experimentStarted) return;
 
-        scale5Btn.onClick.AddListener(() => { SetScale(5); HighlightScale(scale5Btn); });
-        scale20Btn.onClick.AddListener(() => { SetScale(20); HighlightScale(scale20Btn); });
+        // User ID panel 監聽
+        userIdContinueBtn.onClick.AddListener(OnUserIdContinueClicked);
+
+        // 若已有值（場景重載時）先填回去
+        if (!string.IsNullOrEmpty(_userId) && userIdInputField != null)
+            userIdInputField.text = _userId;
+
+        // Config panel buttons 監聽
+        scale5Btn  .onClick.AddListener(() => { SetScale(5);   HighlightScale(scale5Btn);   });
+        scale20Btn .onClick.AddListener(() => { SetScale(20);  HighlightScale(scale20Btn);  });
         scale100Btn.onClick.AddListener(() => { SetScale(100); HighlightScale(scale100Btn); });
-        rounds10Btn.onClick.AddListener(() => { SetRounds(10); HighlightRounds(rounds10Btn); });
-        rounds15Btn.onClick.AddListener(() => { SetRounds(15); HighlightRounds(rounds15Btn); });
+        
+        rounds10Btn.onClick.AddListener(() => {
+            if (_randomAllocation) return;
+            SetRounds(10); 
+            HighlightRounds(rounds10Btn); 
+        });
+        
+        rounds15Btn.onClick.AddListener(() => {
+            if (_randomAllocation) return;
+            SetRounds(15); 
+            HighlightRounds(rounds15Btn); 
+        });
+        
         warmStartToggle.onValueChanged.AddListener(val => _warmStart = val);
+        randomAllocationToggle.onValueChanged.AddListener(OnRandomAllocationChanged);
         startBtn.onClick.AddListener(OnStartClicked);
 
-        // 读取 Toggle 初始状态
         _warmStart = warmStartToggle.isOn;
+        _randomAllocation = randomAllocationToggle.isOn;
 
         HighlightScale(scale5Btn);
         HighlightRounds(rounds10Btn);
     }
 
-    void SetScale(int val) { _likertMax = val; }
+    // ─────────────────────────────────────────────
+    // User ID Continue 處理（直接讀取字串）
+    // ─────────────────────────────────────────────
+    void OnUserIdContinueClicked()
+    {
+        string trimmed = userIdInputField != null ? userIdInputField.text.Trim() : "";
+
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            Debug.LogWarning("[ExperimentConfig] User ID 不能空白，請輸入後再繼續。");
+            return;
+        }
+
+        // 🟢 直接使用受試者輸入的原始字串，不再進行任何加密處理
+        _userId = trimmed;
+        boManager.userId = _userId;
+
+        Debug.Log($"[ExperimentConfig] User ID 已設定為原始字串：'{_userId}'");
+
+        userIdPanel.SetActive(false);
+        configPanel.SetActive(true);
+    }
+
+    void OnRandomAllocationChanged(bool isOn)
+    {
+        _randomAllocation = isOn;
+        if (isOn)
+        {
+            _samplingRounds = 15;
+            HighlightRounds(rounds15Btn);
+            rounds10Btn.interactable = false;
+            rounds15Btn.interactable = false;
+        }
+        else
+        {
+            rounds10Btn.interactable = true;
+            rounds15Btn.interactable = true;
+            _samplingRounds = 10;
+            HighlightRounds(rounds10Btn);
+        }
+    }
+
+    void SetScale(int val)          { _likertMax      = val; }
     void SetRounds(int samplingVal) { _samplingRounds = samplingVal; }
 
     void HighlightScale(Button selected)
     {
-        SetButtonColor(scale5Btn, _defaultColor);
-        SetButtonColor(scale20Btn, _defaultColor);
+        SetButtonColor(scale5Btn,   _defaultColor);
+        SetButtonColor(scale20Btn,  _defaultColor);
         SetButtonColor(scale100Btn, _defaultColor);
-        SetButtonColor(selected, _selectedColor);
+        SetButtonColor(selected,    _selectedColor);
     }
 
     void HighlightRounds(Button selected)
     {
         SetButtonColor(rounds10Btn, _defaultColor);
         SetButtonColor(rounds15Btn, _defaultColor);
-        SetButtonColor(selected, _selectedColor);
+        SetButtonColor(selected,    _selectedColor);
     }
 
     void SetButtonColor(Button btn, Color color)
     {
         var colors = btn.colors;
-        colors.normalColor = color;
+        colors.normalColor   = color;
         colors.selectedColor = color;
         btn.colors = colors;
     }
@@ -104,58 +213,88 @@ public class ExperimentConfig : MonoBehaviour
         _experimentStarted = true;
         ApplyConfig();
 
-        // 设好参数后才启动 Python
         if (boManager.pythonStarter != null)
             boManager.pythonStarter.enabled = true;
 
         configPanel.SetActive(false);
         boManager.welcomePanel.SetActive(true);
+
         if (boManager.initialized)
             boManager.nextButton.SetActive(true);
     }
 
+    // ─────────────────────────────────────────────
+    // ApplyConfig 
+    // ─────────────────────────────────────────────
     void ApplyConfig()
     {
-        UnityEngine.Debug.Log($"ApplyConfig: likertMax={_likertMax}, warmStart={_warmStart}, sampling={_samplingRounds}");
+        if (!string.IsNullOrEmpty(_userId))
+            boManager.userId = _userId;
 
-        // 重新找 slider
-        Slider s = null;
-        foreach (var slider in Resources.FindObjectsOfTypeAll<Slider>())
+        // 自動對照組 Condition ID 編碼 (1-5->1, 1-20->2, 1-100->3)
+        if (_likertMax == 5) boManager.conditionId = "1";
+        else if (_likertMax == 20) boManager.conditionId = "2";
+        else if (_likertMax == 100) boManager.conditionId = "3";
+
+        // 自動對照組 Group ID 編碼 (10 輪->1, 15 輪->2)
+        if (_samplingRounds == 10) boManager.groupId = "1";
+        else if (_samplingRounds == 15) boManager.groupId = "2";
+
+        UnityEngine.Debug.Log(
+            $"[ApplyConfig] UserID={_userId}, ConditionID={boManager.conditionId}, GroupID={boManager.groupId}, RandomAllocation={_randomAllocation}"
+        );
+
+        // 資料驅動滑桿元件更新
+        if (evaluationSlider != null)
         {
-            if (slider.gameObject.name == "SliderBar")
-            {
-                s = slider;
-                break;
-            }
+            evaluationSlider.minValue = 1;
+            evaluationSlider.maxValue = _likertMax;
+            evaluationSlider.wholeNumbers = true;
+            evaluationSlider.value = (_likertMax + 1) / 2;
+        }
+        else
+        {
+            Debug.LogWarning("ExperimentConfig: evaluationSlider 未在 Inspector 中指派！");
         }
 
-        if (s != null)
-        {
-            s.minValue = 1;
-            s.maxValue = _likertMax;
-            s.wholeNumbers = true;
-            s.value = (_likertMax + 1) / 2;
-        }
-
-        // 用名字找 mental_demand objective
+        // 資料驅動問卷優化目標綁定
+        bool foundObjective = false;
         foreach (var obj in boManager.objectives)
         {
-            if (obj.key == "mental_demand")
+            if (obj.key == targetObjectiveKey)
             {
                 obj.value.lowerBound = 1;
                 obj.value.upperBound = _likertMax;
+                foundObjective = true;
                 break;
             }
         }
+        if (!foundObjective)
+        {
+            Debug.LogWarning($"ExperimentConfig: 在 BoManager 中找不到 Objective Key: '{targetObjectiveKey}'");
+        }
 
-        boManager.numSamplingIterations = _samplingRounds;
-        boManager.numOptimizationIterations = (_samplingRounds == 15) ? 0 : 5;
+        // =========================
+        // RANDOM ALLOCATION & ITERATIONS
+        // =========================
+        if (_randomAllocation)
+        {
+            boManager.numSamplingIterations = 15;
+            boManager.numOptimizationIterations = 0;
+            boManager.enableFinalDesignRound = false;
+        }
+        else
+        {
+            boManager.numSamplingIterations = _samplingRounds;
+            boManager.numOptimizationIterations = (_samplingRounds == 15) ? optimizationRoundsFor15 : optimizationRoundsFor10;
+            boManager.enableFinalDesignRound = true;
+        }
+
         boManager.warmStart = _warmStart;
-        boManager.enableFinalDesignRound = true;
 
         boManager.totalIterations = _warmStart
             ? boManager.numOptimizationIterations
-            : _samplingRounds + boManager.numOptimizationIterations;
+            : boManager.numSamplingIterations + boManager.numOptimizationIterations;
 
         if (_warmStart)
         {

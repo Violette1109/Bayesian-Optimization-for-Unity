@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 import moocore
+import pathlib
 
 from botorch.acquisition.multi_objective.logei import qLogNoisyExpectedHypervolumeImprovement
 from botorch.models import SingleTaskGP
@@ -59,12 +60,12 @@ objective_names = []
 parameters_info = []   # [(lo, hi)]
 objectives_info = []   # [(lo, hi, minimizeFlag)]
 
-# 加上這四行全域變數，用來動態儲存 Unity 面板傳過來的實驗條件
+# 加上全域變數，用來動態儲存 Unity 面板傳過來的實驗條件
 SLIDER_RESOLUTION = 5
 IS_WARM_START = False
 SHOW_PRIOR_HINT = False
 SAMPLING_ROUNDS = 10
-RANDOM_ALLOCATION = False
+RANDOM_ALLOCATION = False  # 🟢 這裡新增了隨機分配的狀態
 
 # device
 tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
@@ -250,10 +251,12 @@ def denormalize_to_original_obj(v_m1p1, lo, hi, smaller_is_better):
     v = -v_m1p1 if int(smaller_is_better) == 1 else v_m1p1
     return np.round(lo + (v + 1) * 0.5 * (hi - lo), 3)
 
-# 修正 1：擴充欄位定義，加入四個實驗設計欄位 (多目標保留 IsPareto)
+# 🟢 修正 1：擴充欄位定義，加入四個實驗變項 ＋ 隨機分配欄位 (RandomAllocation)
 def expected_observation_columns():
     return [
-        'UserID', 'ConditionID', 'GroupID', 'Timestamp', 'Iteration', 'Phase', 'IsBest', 'IsWarmStart', 'ShowPriorHint', 'RandomAllocation'  # <-- 欄位追蹤全面解鎖
+        'UserID', 'ConditionID', 'GroupID', 'Timestamp', 'Iteration', 'Phase', 'IsPareto',
+        'SliderResolution', 'IsWarmStart', 'ShowPriorHint', 'SamplingRounds', 
+        'RandomAllocation'  # <-- 後台數據身分證補齊
     ] + objective_names + parameter_names
 
 def normalize_param_column(col, lo, hi):
@@ -444,12 +447,13 @@ def generate_initial_data(conn, n_samples):
     train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
     print("Initial Sobol X in [0,1]:", train_x, flush=True)
 
-    # 修正 2：多目標採樣階段，同步讀取全域變數，確保 15 輪對照組格式一致
-    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    # 🟢 修正 2：多目標採樣階段，同步讀取全域變數（含新增的 RANDOM_ALLOCATION）
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS, RANDOM_ALLOCATION
     slider_res = globals().get('SLIDER_RESOLUTION', 5)
     is_ws = str(globals().get('IS_WARM_START', False)).upper()
     show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
     sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
+    rand_alloc = str(globals().get('RANDOM_ALLOCATION', False)).upper()
 
     train_obj = []
     for i, x in enumerate(train_x):
@@ -462,11 +466,11 @@ def generate_initial_data(conn, n_samples):
         x_den = [denormalize_to_original_param(x_np[j], parameters_info[j][0], parameters_info[j][1]) for j in range(PROBLEM_DIM)]
         y_den = [denormalize_to_original_obj(y_np[j], objectives_info[j][0], objectives_info[j][1], objectives_info[j][2]) for j in range(NUM_OBJS)]
         
-        # 修正 3：對齊新欄位，將 4 個變數塞入 row 中
+        # 🟢 修正 3：對齊新欄位結構，完整寫入隨機分配變數
         row = [USER_ID, CONDITION_ID, GROUP_ID,
                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                i+1, 'sampling', 'FALSE',
-               slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
+               slider_res, is_ws, show_hint, sampling_rds, rand_alloc, # <-- 塞在這裡
                *y_den, *x_den]
         with open(obs_csv, 'a', newline='') as f:
             csv.writer(f, delimiter=';').writerow(row)
@@ -586,18 +590,19 @@ def save_xy(x_sample, y_sample, iteration):
         cols = expected_observation_columns()
         df = pd.DataFrame(columns=cols)
 
-    # 修正 4：多目標優化階段，讀取全域變數
-    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    # 🟢 修正 4：多目標優化階段，讀取全域變數（含新增的 RANDOM_ALLOCATION）
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS, RANDOM_ALLOCATION
     slider_res = globals().get('SLIDER_RESOLUTION', 5)
     is_ws = str(globals().get('IS_WARM_START', False)).upper()       
     show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
     sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
+    rand_alloc = str(globals().get('RANDOM_ALLOCATION', False)).upper()
 
-    # 修正 5：組裝 row 資料結構，補齊這 4 個變數，確保與採樣格式完全相同
+    # 🟢 修正 5：組裝 row 資料結構，補齊變數，確保與採樣階段完全對齊
     new_row = pd.DataFrame([[USER_ID, CONDITION_ID, GROUP_ID,
                              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                              iteration_index, 'optimization', 'FALSE',
-                             slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
+                             slider_res, is_ws, show_hint, sampling_rds, rand_alloc, # <-- 塞在這裡
                              *y_np[-1], *x_np[-1]]], columns=df.columns)
 
     if df.empty:
@@ -627,8 +632,14 @@ def save_hypervolume_to_file(hvs, iteration):
 # -------------------- main loop --------------------
 def mobo_execute(conn, seed, iterations, initial_samples):
     global PROJECT_PATH, OBSERVATIONS_LOG_PATH
-    base = os.path.join(os.getcwd(), "LogData")
+    
+    # 🟢 數據搬家優化：利用 pathlib 往上跳 5 層，移出 Unity 專案資產樹（與 bo.py 對齊）
+    current_script_path = pathlib.Path(__file__).resolve()
+    study_data_root = current_script_path.parents[5] / "AIRC_Study_Data"
+    
+    base = str(study_data_root)
     os.makedirs(base, exist_ok=True)
+    
     PROJECT_PATH = get_unique_folder(base, USER_LOG_ID)
     OBSERVATIONS_LOG_PATH = os.path.join(PROJECT_PATH, "ObservationsPerEvaluation.csv")
 
@@ -743,12 +754,12 @@ def main():
         CSV_PATH_OBJECTIVES = str(cfg.get("initialObjectivesDataPath") or "")
         WARM_START_OBJECTIVE_FORMAT = str(cfg.get("warmStartObjectiveFormat", WARM_START_OBJECTIVE_FORMAT) or "auto").strip().lower()
 
-        # 修正 6：在 init 成功對接時，強迫將 Unity 發送的 JSON 配置參數寫入 Python 全域變數
+        # 🟢 修正 6：在對接 init 成功時，動態將資料寫入全域變數
         globals()['SLIDER_RESOLUTION'] = get_cfg_int(cfg, "sliderResolution", default=5)
         globals()['IS_WARM_START']     = bool(cfg.get("warmStart", False))
         globals()['SHOW_PRIOR_HINT']   = bool(cfg.get("showPriorHint", False))
         globals()['SAMPLING_ROUNDS']   = get_cfg_int(cfg, "numSamplingIterations", default=10)
-        globals()['RANDOM_ALLOCATION'] = bool(cfg.get("randomAllocation", False))  # <-- 對齊
+        globals()['RANDOM_ALLOCATION'] = bool(cfg.get("randomAllocation", False)) # <-- 成功對接
 
         if WARM_START_OBJECTIVE_FORMAT not in ("auto", "raw", "normalized_max", "normalized_native"):
             raise ValueError(
