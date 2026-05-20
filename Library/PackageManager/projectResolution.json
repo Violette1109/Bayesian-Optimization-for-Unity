@@ -9,13 +9,13 @@
     "/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/PackageManager/BuiltInPackages/BuiltInPackagesCombined.sha1"
   ],
   "outputs": {
-    "com.unity.ide.rider@3.0.40": {
+    "com.unity.ide.rider@3.0.39": {
       "name": "com.unity.ide.rider",
       "displayName": "JetBrains Rider Editor",
-      "resolvedPath": "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ide.rider@e4950c6d131b",
-      "fingerprint": "e4950c6d131b925f19dd0b34bdf800110120f8de",
+      "resolvedPath": "/Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ide.rider@4504839d03f7",
+      "fingerprint": "4504839d03f7a5a4495357084a0ffd6e439892cf",
       "editorCompatibility": "2021.3.0a1",
-      "version": "3.0.40",
+      "version": "3.0.39",
       "source": "registry",
       "testable": false
     },

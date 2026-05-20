@@ -7,9 +7,9 @@ Darwin version:          25.3.0
 Architecture:            arm64
 Running under Rosetta:   NO
 Available memory:        8192 MB
-Date:                    2026-05-14T12:44:28Z
+Date:                    2026-05-20T13:18:38Z
 [Licensing::Module] Trying to connect to existing licensing client channel...
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv" at "2026-05-14T12:44:28.60532Z"
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv" at "2026-05-20T13:18:38.959248Z"
 
 COMMAND LINE ARGUMENTS:
 /Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/MacOS/Unity
@@ -23,9 +23,7 @@ AssetImportWorker1
 -logFile
 Logs/AssetImportWorker1.log
 -srvPort
-59552
--licensingIpc
-LicenseClient-violetvwv
+62724
 -job-worker-count
 3
 -background-job-worker-count
@@ -72,7 +70,7 @@ Successfully changed project path to: /Users/violetvwv/Desktop/Bayesian-Optimiza
     "memorysetup-temp-allocator-size-gfx=262144"
 Player connection [8317645056]  Target information:
 
-Player connection [8317645056]  * "[IP] 10.99.126.40 [Port] 0 [Flags] 2 [Guid] 3985586620 [EditorId] 3985586620 [Version] 1048832 [Id] OSXEditor(0,Violets-MacBook-Air.local) [Debug] 1 [PackageName] OSXEditor [ProjectName] Editor" 
+Player connection [8317645056]  * "[IP] 10.99.126.40 [Port] 0 [Flags] 2 [Guid] 3296679481 [EditorId] 3296679481 [Version] 1048832 [Id] OSXEditor(0,Violets-MacBook-Air.local) [Debug] 1 [PackageName] OSXEditor [ProjectName] Editor" 
 
 Player connection [8317645056] Host joined multi-casting on [225.0.0.222:54997]...
 Player connection [8317645056] Host joined alternative multi-casting on [225.0.0.222:34997]...
@@ -87,13 +85,7 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-[Licensing::Client] Error: HandshakeResponse reported an error:
-	ResponseCode: 505
-	ResponseStatus: Unsupported protocol version '1.18.0'.
-[Licensing::Module] Error: Failed to handshake to channel: "LicenseClient-violetvwv"
-[Licensing::IpcConnector] LicenseClient-violetvwv channel disconnected successfully.
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv-6000.3.11" at "2026-05-14T12:44:29.702829Z"
-Refreshing native plugins compatible for Editor in 1.64 ms, found 1 plugins.
+Refreshing native plugins compatible for Editor in 0.78 ms, found 1 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.3.11f1 (3000ef702840)
 [Subsystems] Discovering subsystems at path /Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/UnitySubsystems
@@ -110,25 +102,31 @@ MSL Version: 3.0
 Has Float MSAA: 1
 Has Float Filtering: 1
 ReadWrite Texture Tier: 2
-[Licensing::Client] Handshaking with LicensingClient:
-  Version:                 1.18.0+23225a6
-  Session Id:              24f57d484ddc44159360f5e22eb6924c
-  Correlation Id:          db4a6d23dba31b1b1f7c7e26f4aff7ec
-  External correlation Id: 8159982169457616710
-  Machine Id:              dfkKfb9UMj8v7AN5rRefKfXlO9c=
-[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-violetvwv-6000.3.11" (connect: 0.00s, validation: 0.00s, handshake: 0.02s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv-6000.3.11-notifications" at "2026-05-14T12:44:29.725321Z"
-[Licensing::Module] Licensing Background thread has ended after 1.12s
+[Licensing::Client] Error: HandshakeResponse reported an error:
+	ResponseCode: 505
+	ResponseStatus: Unsupported protocol version '1.18.0'.
+[Licensing::Module] Error: Failed to handshake to channel: "LicenseClient-violetvwv"
+[Licensing::IpcConnector] LicenseClient-violetvwv channel disconnected successfully.
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv-6000.3.11" at "2026-05-20T13:18:39.90772Z"
 Initialize mono
 Mono path[0] = '/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/Scripting/Managed'
 Mono path[1] = '/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/Scripting/MonoBleedingEdge/lib/mono/unityjit-macos'
 Mono config path = '/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Resources/Scripting/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56021
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56257
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.0+23225a6
+  Session Id:              3c73dc456a8b4ca592c1cbd4e69b79e0
+  Correlation Id:          f762d3e3d84a67427473eb1a7c587ae3
+  External correlation Id: 8778576386658103164
+  Machine Id:              dfkKfb9UMj8v7AN5rRefKfXlO9c=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-violetvwv-6000.3.11" (connect: 0.00s, validation: 0.00s, handshake: 0.10s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-violetvwv-6000.3.11-notifications" at "2026-05-20T13:18:40.011803Z"
+[Licensing::Module] Licensing Background thread has ended after 1.05s
 Begin MonoManager ReloadAssembly
 Registering precompiled unity dll's ...
 Register platform support module: /Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/PlaybackEngines/MacStandaloneSupport/UnityEditor.OSXStandalone.Extensions.dll
-Registered in 0.001338 seconds.
-- Loaded All Assemblies, in  0.422 seconds
+Registered in 0.001122 seconds.
+- Loaded All Assemblies, in  0.424 seconds
 Native extension for OSXStandalone target not found
 Package Manager log level set to [2]
 [Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
@@ -136,35 +134,35 @@ Package Manager log level set to [2]
 [Package Manager] Cannot connect to Unity Package Manager local server
 ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.366 seconds
-Domain Reload Profiling: 788ms
-	BeginReloadAssembly (146ms)
+- Finished resetting the current domain, in  0.402 seconds
+Domain Reload Profiling: 827ms
+	BeginReloadAssembly (135ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (1ms)
-	RebuildCommonClasses (39ms)
+	RebuildCommonClasses (38ms)
 	RebuildNativeTypeToScriptingClass (15ms)
-	initialDomainReloadingComplete (44ms)
-	LoadAllAssembliesAndSetupDomain (178ms)
-		LoadAssemblies (145ms)
+	initialDomainReloadingComplete (48ms)
+	LoadAllAssembliesAndSetupDomain (188ms)
+		LoadAssemblies (135ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (175ms)
-			TypeCache.Refresh (173ms)
-				TypeCache.ScanAssembly (154ms)
+		AnalyzeDomain (184ms)
+			TypeCache.Refresh (181ms)
+				TypeCache.ScanAssembly (162ms)
 			BuildScriptInfoCaches (0ms)
-			ResolveRequiredComponents (0ms)
-	FinalizeReload (367ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (403ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (328ms)
+		SetupLoadedEditorAssemblies (364ms)
 			LogAssemblyErrors (0ms)
 			InitializePlatformSupportModulesInManaged (39ms)
 			SetLoadedEditorAssemblies (5ms)
-			BeforeProcessingInitializeOnLoad (75ms)
-			ProcessInitializeOnLoadAttributes (112ms)
-			ProcessInitializeOnLoadMethodAttributes (96ms)
+			BeforeProcessingInitializeOnLoad (74ms)
+			ProcessInitializeOnLoadAttributes (123ms)
+			ProcessInitializeOnLoadMethodAttributes (123ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -186,725 +184,521 @@ Begin MonoManager ReloadAssembly
   Type: Assigned
   Expiration: Unlimited
 Symbol file LoadedFromMemory is not a mono symbol file
-- Loaded All Assemblies, in  0.471 seconds
-Refreshing native plugins compatible for Editor in 0.30 ms, found 1 plugins.
+- Loaded All Assemblies, in  0.412 seconds
+Refreshing native plugins compatible for Editor in 0.26 ms, found 1 plugins.
 Native extension for OSXStandalone target not found
 [Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
 [Package Manager] Unable to send message (not connected to server process).
 [Package Manager] Cannot connect to Unity Package Manager local server
 ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  0.336 seconds
-Domain Reload Profiling: 807ms
-	BeginReloadAssembly (130ms)
+- Finished resetting the current domain, in  0.376 seconds
+Domain Reload Profiling: 789ms
+	BeginReloadAssembly (125ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (5ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
 		CreateAndSetChildDomain (20ms)
-	RebuildCommonClasses (36ms)
+	RebuildCommonClasses (37ms)
 	RebuildNativeTypeToScriptingClass (15ms)
 	initialDomainReloadingComplete (28ms)
-	LoadAllAssembliesAndSetupDomain (262ms)
-		LoadAssemblies (242ms)
+	LoadAllAssembliesAndSetupDomain (208ms)
+		LoadAssemblies (194ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (83ms)
-			TypeCache.Refresh (74ms)
-				TypeCache.ScanAssembly (58ms)
+		AnalyzeDomain (74ms)
+			TypeCache.Refresh (64ms)
+				TypeCache.ScanAssembly (51ms)
 			BuildScriptInfoCaches (5ms)
 			ResolveRequiredComponents (2ms)
-	FinalizeReload (337ms)
+	FinalizeReload (376ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (228ms)
+		SetupLoadedEditorAssemblies (281ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (3ms)
-			SetLoadedEditorAssemblies (4ms)
-			BeforeProcessingInitializeOnLoad (93ms)
-			ProcessInitializeOnLoadAttributes (97ms)
-			ProcessInitializeOnLoadMethodAttributes (30ms)
-			AfterProcessingInitializeOnLoad (1ms)
+			InitializePlatformSupportModulesInManaged (1ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (90ms)
+			ProcessInitializeOnLoadAttributes (141ms)
+			ProcessInitializeOnLoadMethodAttributes (42ms)
+			AfterProcessingInitializeOnLoad (2ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
 		AwakeInstancesAfterBackupRestoration (3ms)
 Launching external process: /Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/Helpers/UnityShaderCompiler
-Launched and connected shader compiler UnityShaderCompiler after 0.10 seconds
-Refreshing native plugins compatible for Editor in 0.93 ms, found 1 plugins.
+Launched and connected shader compiler UnityShaderCompiler after 0.16 seconds
+Refreshing native plugins compatible for Editor in 0.30 ms, found 1 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 577 unused Assets / (44.1 KB). Loaded Objects now: 1175.
+Unloading 577 unused Assets / (64.6 KB). Loaded Objects now: 1177.
 Memory consumption went from 70.9 MB to 70.9 MB.
-Total: 12.621416 ms (FindLiveObjects: 0.413375 ms CreateObjectMapping: 0.051500 ms MarkObjects: 11.736167 ms  DeleteObjects: 0.419625 ms)
+Total: 6.121292 ms (FindLiveObjects: 0.181000 ms CreateObjectMapping: 0.020209 ms MarkObjects: 5.726334 ms  DeleteObjects: 0.193125 ms)
 
 ========================================================================
 Received Import Request.
-  Time since last request: 454664.639867 seconds.
-  path: Assets/BOforUnity/LoadingImages/frame_09_delay-0.05s.png
-  artifactKey: Guid(dbac029e0e7f649ea95912886d1b3672) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/LoadingImages/frame_09_delay-0.05s.png using Guid(dbac029e0e7f649ea95912886d1b3672) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1b972bd3eeb73b3c2d2c1ef7d41fa9cf') in 0.226760917 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000104 seconds.
-  path: Assets/WebGLTemplates/Neocortex
-  artifactKey: Guid(6a644b8c57077402c9f49f16d8ce9e8f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/WebGLTemplates/Neocortex using Guid(6a644b8c57077402c9f49f16d8ce9e8f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '0ad335da509a4872a0ffd7cd521037dd') in 0.0038855 seconds
+  Time since last request: 617780.925508 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-313.pyc
+  artifactKey: Guid(268b7c07651bb46e9b3513b1fce286d5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-313.pyc using Guid(268b7c07651bb46e9b3513b1fce286d5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '583e40b1c7032e3624c0a4134aec5b1e') in 0.062785834 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000552 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_78/ObservationsPerEvaluation.csv
-  artifactKey: Guid(c1f7b22c8fc044bae8a7ff4a7f6551f5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_78/ObservationsPerEvaluation.csv using Guid(c1f7b22c8fc044bae8a7ff4a7f6551f5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '425e0de8c48dc997898bb1575ceb7f81') in 0.005265792 seconds
+  Time since last request: 0.000753 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/bo.cpython-313.pyc
+  artifactKey: Guid(945b9f748a16b4487b39d7606ac1f4fd) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/bo.cpython-313.pyc using Guid(945b9f748a16b4487b39d7606ac1f4fd) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b04da422339c9872310974a480207def') in 0.003857375 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000116 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_47
-  artifactKey: Guid(59d16a4fd14884f10ae9a622a250a30d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_47 using Guid(59d16a4fd14884f10ae9a622a250a30d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '83cbde4d0e79df2eead4571befe665a7') in 0.003353917 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000319 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Scripts/TextMeshSpawner.cs
-  artifactKey: Guid(76c11bbcfddf44e0ba17d6c2751c8d84) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Scripts/TextMeshSpawner.cs using Guid(76c11bbcfddf44e0ba17d6c2751c8d84) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'e1cf26770fd36ee01a981085280df6eb') in 0.004075541 seconds
+  Time since last request: 0.000165 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/System.Windows.Forms.dll
+  artifactKey: Guid(7d459a96865cc4aaab657012c6dc4833) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/System.Windows.Forms.dll using Guid(7d459a96865cc4aaab657012c6dc4833) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '0841840fa8ee423fbd367ebdb405e1e2') in 0.039511125 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000214 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_122
-  artifactKey: Guid(71845c1ff2e924c3087a96b0633beb7c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_122 using Guid(71845c1ff2e924c3087a96b0633beb7c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '89f53e8de385181e13d840f87fb0096d') in 0.002075875 seconds
+  Time since last request: 0.000139 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/cabop_runtime.py
+  artifactKey: Guid(9888ae8caedd4374853bc9a06ebc8b4e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/cabop_runtime.py using Guid(9888ae8caedd4374853bc9a06ebc8b4e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '9611c1fb6abdd004d2f1bb0d2832c867') in 0.00320025 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000138 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_16/ObservationsPerEvaluation.csv
-  artifactKey: Guid(f89044b2cd31a4e71934978d1fe9642c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_16/ObservationsPerEvaluation.csv using Guid(f89044b2cd31a4e71934978d1fe9642c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '29e644bdc0947ea6b837fe2e4ae9332c') in 0.00169425 seconds
+  Time since last request: 0.000666 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTCheckboxesGrid.cs
+  artifactKey: Guid(1b9c862e12037e04bb9bbba16d690888) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTCheckboxesGrid.cs using Guid(1b9c862e12037e04bb9bbba16d690888) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1fffd2b1877135fe11b968ba9a646691') in 0.014857 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000278 seconds.
-  path: Assets/QuestionnaireToolkit/Textures/Banner
-  artifactKey: Guid(42e5cb000259f77438658d79df065db5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Textures/Banner using Guid(42e5cb000259f77438658d79df065db5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '10fe6d2df9f0436b329e810b646fec7b') in 0.002072334 seconds
+  Time since last request: 0.000106 seconds.
+  path: Assets/BOforUnity/Scenes/BO-click-game warm.unity
+  artifactKey: Guid(38b162bf78ac740a882c7e23fcee1040) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scenes/BO-click-game warm.unity using Guid(38b162bf78ac740a882c7e23fcee1040) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'de3f43d7adfe108f477f1a38cf59e84c') in 0.023091833 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000162 seconds.
-  path: Assets/BOforUnity/Scripts/MainThreadDispatcher.cs
-  artifactKey: Guid(b3ad18accc2564b048a36995daaed1b8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Scripts/MainThreadDispatcher.cs using Guid(b3ad18accc2564b048a36995daaed1b8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '9a8bcb8d43a03f8d80735bddab911a97') in 0.001974167 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000231 seconds.
-  path: Assets/QuestionnaireToolkit
-  artifactKey: Guid(04d33bc36d549e54aad6b1ecc5dc67ff) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit using Guid(04d33bc36d549e54aad6b1ecc5dc67ff) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '9775d102dc3ff317608a8e9a07c5f19f') in 0.002025125 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000159 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Materials/Ground - Surface Shader Scene.mat
-  artifactKey: Guid(aadd5a709a48466c887296bb5b1b8110) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Materials/Ground - Surface Shader Scene.mat using Guid(aadd5a709a48466c887296bb5b1b8110) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '916ac5fbb32ec2fcf5627dc4e98be1dd') in 0.768045417 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.136567 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_19
-  artifactKey: Guid(e5dd0893592dc49a292c040514eaadcd) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_19 using Guid(e5dd0893592dc49a292c040514eaadcd) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b7fc5428533a3df7b8a738afbdbbaa58') in 0.002172208 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000087 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_117
-  artifactKey: Guid(eca6f2abfc3074ec0bf7a40e48aeb368) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_117 using Guid(eca6f2abfc3074ec0bf7a40e48aeb368) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '2ede4f4b163210eeb7d0465b9ac7ffb0') in 0.001251667 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000182 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_38
-  artifactKey: Guid(5b0abf154f3dc42f48debff834ae39c6) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_38 using Guid(5b0abf154f3dc42f48debff834ae39c6) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fc0afcedcea6e9cb378185e7566beca4') in 0.001279459 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000142 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Materials
-  artifactKey: Guid(5808953df7a24274a851aa6dee52d30e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Materials using Guid(5808953df7a24274a851aa6dee52d30e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '451aabdf4b645547232ca009214acab8') in 0.001902083 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000060 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_135/ObservationsPerEvaluation.csv
-  artifactKey: Guid(6a3872c48d84f496e9d3ffda052df312) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_135/ObservationsPerEvaluation.csv using Guid(6a3872c48d84f496e9d3ffda052df312) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '80c4e479ad1cba6a658744ef003b6b62') in 0.001164417 seconds
+  Time since last request: 0.000176 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-312.pyc
+  artifactKey: Guid(e830d05d3b7007d4ab56690c8022fcee) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-312.pyc using Guid(e830d05d3b7007d4ab56690c8022fcee) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'd00fce920d84400d8b1fa16d5957cfdc') in 0.001471083 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
   Time since last request: 0.000049 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_91
-  artifactKey: Guid(25bf9df43b180422984eb243031b66d3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_91 using Guid(25bf9df43b180422984eb243031b66d3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'baaf494264cbaa9f0c1f075fe1a76b18') in 0.000842833 seconds
+  path: Assets/QuestionnaireToolkit/Scripts/QTSlider.cs
+  artifactKey: Guid(1f10031791c90a044a6bb87cd0fb4da2) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTSlider.cs using Guid(1f10031791c90a044a6bb87cd0fb4da2) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1c1c8fa65910048eae6fe0056ce95971') in 0.004245125 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000043 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Resources/Sprite Assets/Default Sprite Asset.asset
-  artifactKey: Guid(fbef3c704dce48f08a44612d6c856c8d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Resources/Sprite Assets/Default Sprite Asset.asset using Guid(fbef3c704dce48f08a44612d6c856c8d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '469802a42833fd3d83fd1e9f1b462d61') in 0.019364625 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 3
+  Time since last request: 0.000069 seconds.
+  path: Assets/BOforUnity/Scenes/BO-single-objective-demo.unity
+  artifactKey: Guid(00ad1733329accf479a2642f07695dc3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scenes/BO-single-objective-demo.unity using Guid(00ad1733329accf479a2642f07695dc3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '20bbb922e5d62fde0bf5093d90e8b538') in 0.021843458 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000081 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Scripts/DropdownSample.cs
-  artifactKey: Guid(ac1eb05af6d391b4eb0f4c070a99f1d0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Scripts/DropdownSample.cs using Guid(ac1eb05af6d391b4eb0f4c070a99f1d0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '175f50454c629c53bfd34859a39f7ba9') in 0.002895042 seconds
+  Time since last request: 0.000167 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-311.pyc
+  artifactKey: Guid(7a61cfd3fcb044e4db5a6af2d7fad53e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-311.pyc using Guid(7a61cfd3fcb044e4db5a6af2d7fad53e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'a73df098a2cc129425e7d6ea0e9d6a16') in 0.00436075 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000330 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Ookii.Dialogs.dll
+  artifactKey: Guid(e60958662eed5413d86143a0a69b731e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Ookii.Dialogs.dll using Guid(e60958662eed5413d86143a0a69b731e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f2c91fae1d7d0b3a052729fcd2ed534e') in 0.004969541 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000054 seconds.
-  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-311.pyc
-  artifactKey: Guid(7a61cfd3fcb044e4db5a6af2d7fad53e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/mobo.cpython-311.pyc using Guid(7a61cfd3fcb044e4db5a6af2d7fad53e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1c4859415caa5557fb601077ffdd043f') in 0.0015645 seconds
+  Time since last request: 0.000277 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-311.pyc
+  artifactKey: Guid(39a761bea1e9c42d28458d9ba96032ef) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-311.pyc using Guid(39a761bea1e9c42d28458d9ba96032ef) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '74d2ed50125a9723f795e3e16697cdc0') in 0.003260334 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000089 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTDropdown.cs
+  artifactKey: Guid(61617347ff5edae4f8082fde94f114ab) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTDropdown.cs using Guid(61617347ff5edae4f8082fde94f114ab) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'dd168201053b8a5b01636fc5853341a6') in 0.003291167 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000095 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTManager.cs
+  artifactKey: Guid(e73ff6cc52c523143b893b55b36b7168) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTManager.cs using Guid(e73ff6cc52c523143b893b55b36b7168) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fffb75fad236e8cc1777643c6c5d2e98') in 0.003449417 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000167 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTImage.cs
+  artifactKey: Guid(2b487e53f041dae44af669c9471cc923) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTImage.cs using Guid(2b487e53f041dae44af669c9471cc923) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '98a90896a2ca435559b08e2978a39c50') in 0.002506 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000180 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-310.pyc
+  artifactKey: Guid(139c18fd8081d466fa32e7ce71f26e7a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-310.pyc using Guid(139c18fd8081d466fa32e7ce71f26e7a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f01d8334c96d03ee3f1e8cacaf1ed0b4') in 0.002167 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000445 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__
+  artifactKey: Guid(1f2b336a8f4484e91832c614a0065100) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__ using Guid(1f2b336a8f4484e91832c614a0065100) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'af0478ba0c93c1cf68a7f20752a797cf') in 0.003144375 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000394 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTButton.cs
+  artifactKey: Guid(c63d810c7b76e7d45a4e1cac687a5cd7) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTButton.cs using Guid(c63d810c7b76e7d45a4e1cac687a5cd7) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '45e23b4e7519cd32371604418f004b84') in 0.004140292 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000120 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTText.cs
+  artifactKey: Guid(72ee6765daa302347bc724b7f1673227) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTText.cs using Guid(72ee6765daa302347bc724b7f1673227) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fa5ee55bec116bb96993a5f83de58f81') in 0.003428042 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000158 seconds.
+  path: Assets/BOforUnity/Scripts/SocketNetwork.cs
+  artifactKey: Guid(0cb113d0642b13147b253efe5c40bc47) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/SocketNetwork.cs using Guid(0cb113d0642b13147b253efe5c40bc47) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '2786abc6989281b6ac91bcbba5b6add3') in 0.010811208 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
   Time since last request: 0.000080 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/MemberReflection
-  artifactKey: Guid(de9be32fc7960cd4590e016ad6c9ab1f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/MemberReflection using Guid(de9be32fc7960cd4590e016ad6c9ab1f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '556b69d1555cad353415954f7126a39f') in 0.001139875 seconds
+  path: Assets/StreamingAssets/BOData/Installation/MacOs/install_python.sh
+  artifactKey: Guid(f5383e6655a7c476b925049d8a2dd346) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/Installation/MacOs/install_python.sh using Guid(f5383e6655a7c476b925049d8a2dd346) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '58af16b3f801c0b5213f82f80e71767b') in 0.001415667 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000058 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_63
-  artifactKey: Guid(c5bc10f05976a4166bd582dc01143481) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_63 using Guid(c5bc10f05976a4166bd582dc01143481) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'd718057d91c211259df59a922c16ca8b') in 0.001234291 seconds
+  Time since last request: 0.000207 seconds.
+  path: Assets/BOforUnity/Scenes/BO-fitts-law-task.unity
+  artifactKey: Guid(b919a807289b4e3e98d20f672b4a8f65) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scenes/BO-fitts-law-task.unity using Guid(b919a807289b4e3e98d20f672b4a8f65) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3df359827558160fa72c27bb2409490e') in 0.01500675 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000062 seconds.
-  path: Assets/QuestionnaireToolkit/VR Keyboard/Resources
-  artifactKey: Guid(f0cbf418464bd8240917721cb1d1d101) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/VR Keyboard/Resources using Guid(f0cbf418464bd8240917721cb1d1d101) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '6b1fdb57ccd82edb4ebc4eff3a5a0f6f') in 0.001823125 seconds
+  Time since last request: 0.000154 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/bo.cpython-311.pyc
+  artifactKey: Guid(7c726267375fc427eb4283f951bf2a48) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/bo.cpython-311.pyc using Guid(7c726267375fc427eb4283f951bf2a48) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '759411f0599559709d2a37ac11a8f604') in 0.001655791 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000057 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_81/ExecutionTimes.csv
-  artifactKey: Guid(0f032a78bd666408fa293b12b0606ee8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_81/ExecutionTimes.csv using Guid(0f032a78bd666408fa293b12b0606ee8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f1fad08575fae76e6b80e455ca14956d') in 0.001197916 seconds
+  Time since last request: 0.000100 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTLinearScale.cs
+  artifactKey: Guid(e4207fd24b018e146848b63426ecde49) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTLinearScale.cs using Guid(e4207fd24b018e146848b63426ecde49) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '9605471e968bfa0548f1ac08e878950a') in 0.002643792 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000065 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_111
-  artifactKey: Guid(6b9495ad9f7ad4a8998496b886e1f438) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_111 using Guid(6b9495ad9f7ad4a8998496b886e1f438) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '37927b4c908e64d6c7e0b5a7d257f24e') in 0.001307 seconds
+  Time since last request: 0.000112 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-39.pyc
+  artifactKey: Guid(2abe897d8ac804d69bde8fb3ec8439e0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-39.pyc using Guid(2abe897d8ac804d69bde8fb3ec8439e0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '60bb4564bae497eb94ca7b401078bd50') in 0.0015015 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000076 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_90
-  artifactKey: Guid(c46e77b04764b436f868d66184c30f61) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_90 using Guid(c46e77b04764b436f868d66184c30f61) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3702fcffc5d8d3de3e22bf805bfef33a') in 0.001234541 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+  Time since last request: 0.000109 seconds.
+  path: Assets/BOforUnity/Scripts/BoForUnityManager.cs
+  artifactKey: Guid(43e81b2355532462a98aa4ab2748c819) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/BoForUnityManager.cs using Guid(43e81b2355532462a98aa4ab2748c819) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '4263093b6c17338618d8df6c23482f6b') in 0.001942209 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000070 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1/ObservationsPerEvaluation.csv
-  artifactKey: Guid(282f5d938266743f68b1a54824e41199) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1/ObservationsPerEvaluation.csv using Guid(282f5d938266743f68b1a54824e41199) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '70068c83647e75cafa20d70e9f2f98ff') in 0.000909625 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000061 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_96
-  artifactKey: Guid(ddb6dffcaf16945ffa385fbb5566ffb8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_96 using Guid(ddb6dffcaf16945ffa385fbb5566ffb8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3a14717d53a8fcce92f1eb66a29834e9') in 0.000931334 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000125 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/StandaloneFileBrowser.bundle
-  artifactKey: Guid(110fdfb459db4fc448a2ccd37e200fa4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/StandaloneFileBrowser.bundle using Guid(110fdfb459db4fc448a2ccd37e200fa4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'af68f57a2112c185fdff2a0c5e3b004d') in 0.003103417 seconds
+  Time since last request: 0.000171 seconds.
+  path: Assets/BOforUnity/Scripts/FinalDesignSelector.cs
+  artifactKey: Guid(f61fcd7e38eb47949a7b5c52d1e27dab) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/FinalDesignSelector.cs using Guid(f61fcd7e38eb47949a7b5c52d1e27dab) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'ec0674b4f8688b36602e700f66c7b8a6') in 0.002263167 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
   Time since last request: 0.000059 seconds.
-  path: Assets/BOforUnity/Scenes/BO-fitts-law-task.unity
-  artifactKey: Guid(b919a807289b4e3e98d20f672b4a8f65) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Scenes/BO-fitts-law-task.unity using Guid(b919a807289b4e3e98d20f672b4a8f65) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '247ef7203b5dc1c7d8cdb264cb25464d') in 0.010753708 seconds
+  path: Assets/QuestionnaireToolkit/Scripts/QTTextInput.cs
+  artifactKey: Guid(54fcad432888f434c9c79b85b73b5a05) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTTextInput.cs using Guid(54fcad432888f434c9c79b85b73b5a05) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '649c4b0b3d6c337411aee09fe215be70') in 0.002792375 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000076 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/MemberReflection/Reflection
-  artifactKey: Guid(d5d2eb9bbea23de409141ed9507792c8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/MemberReflection/Reflection using Guid(d5d2eb9bbea23de409141ed9507792c8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '54240521f297d959cdc4d2a8608f7817') in 0.001276 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000043 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Scenes/19 - Masking Texture & Soft Mask.unity
-  artifactKey: Guid(9abcd5bd764646568a6ea70d00f9264c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Scenes/19 - Masking Texture & Soft Mask.unity using Guid(9abcd5bd764646568a6ea70d00f9264c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '24b3506a642c04dd92db1635f1fb536d') in 0.002102583 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000057 seconds.
-  path: Assets/BOforUnity/Tests/PlayMode
-  artifactKey: Guid(ac074834eee7c2940a6e2cb30957f5b3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Tests/PlayMode using Guid(ac074834eee7c2940a6e2cb30957f5b3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '63f9366a38a1f3ac97393ff6016712ae') in 0.000899291 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000047 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Linux
-  artifactKey: Guid(82666e520ab4d4cf08bebbb8059cd6f4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Linux using Guid(82666e520ab4d4cf08bebbb8059cd6f4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1b2cef8c3e7fa63a5871ae91af51516a') in 0.001039791 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000071 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_18
-  artifactKey: Guid(5832027d509704dbe8206bb2551493cf) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_18 using Guid(5832027d509704dbe8206bb2551493cf) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '58566f173a548a7072ef2d4d96c8cd14') in 0.000794041 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000039 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_89/ObservationsPerEvaluation.csv
-  artifactKey: Guid(81bd4d73e17204b5ea8eb0c2026d3254) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_89/ObservationsPerEvaluation.csv using Guid(81bd4d73e17204b5ea8eb0c2026d3254) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'c9d373a6d10901af044854ce0334de7d') in 0.000807958 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000040 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Scenes
-  artifactKey: Guid(db1090641b3241f6995b587eb21637bc) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Scenes using Guid(db1090641b3241f6995b587eb21637bc) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '07e39a3056cbe1429ff71facb7b676a0') in 0.000777833 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000039 seconds.
-  path: Assets/BOforUnity/Examples/CylinderMat.mat
-  artifactKey: Guid(a06113d513b3f43d9b80eab19e1ac79f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Examples/CylinderMat.mat using Guid(a06113d513b3f43d9b80eab19e1ac79f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '2de23989bf2faad93dc1c1f605b2eb30') in 0.105408375 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000070 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_20
-  artifactKey: Guid(11866ef58ecb841f8a149de0386035db) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_20 using Guid(11866ef58ecb841f8a149de0386035db) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '8f2a09da54e76d84619910f4b97842d1') in 0.001245292 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000048 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_43
-  artifactKey: Guid(cba06f309db5c4913a1c6ef890622c5b) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_43 using Guid(cba06f309db5c4913a1c6ef890622c5b) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'e7269ca6733e3dd8271824551de40862') in 0.0009815 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000042 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_117/ExecutionTimes.csv
-  artifactKey: Guid(5bb3ffcc5f3ec4b7cb5a400515b3f394) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_117/ExecutionTimes.csv using Guid(5bb3ffcc5f3ec4b7cb5a400515b3f394) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '4921cfd20da2e95112648603d6dbae23') in 0.000815667 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000060 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_59
-  artifactKey: Guid(7dc85a97b5c5042f7b6b353253ee8a7c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_59 using Guid(7dc85a97b5c5042f7b6b353253ee8a7c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '4e52ea27e059c00768361941ea3fac05') in 0.001889042 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000048 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_95
-  artifactKey: Guid(75b0d8b87aa5f459dbec634fd3b24088) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_95 using Guid(75b0d8b87aa5f459dbec634fd3b24088) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '8eaffb9b57b1d8cef5a2f2f2921c67c2') in 0.00081075 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000048 seconds.
-  path: Assets/StreamingAssets/BOData/Installation/MacOs
-  artifactKey: Guid(edaa8a80811cc4399969378116b12b33) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/Installation/MacOs using Guid(edaa8a80811cc4399969378116b12b33) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fdfb2fa8ae2cffbe74ce14fce4e35051') in 0.000945833 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000060 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Sprites
-  artifactKey: Guid(701e577af2ba48b689972d42efb95456) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Sprites using Guid(701e577af2ba48b689972d42efb95456) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3f9739bd77cb17143d38f04f779c0227') in 0.000833458 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000043 seconds.
-  path: Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile-2-Pass.shader
-  artifactKey: Guid(0178fcb869bafef4690d177d31d17db8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile-2-Pass.shader using Guid(0178fcb869bafef4690d177d31d17db8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '871742643b6892b801c88e421e3feb4b') in 0.006431292 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000047 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_48
-  artifactKey: Guid(8acf845767f9c4141b12cbe69bd82a74) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_48 using Guid(8acf845767f9c4141b12cbe69bd82a74) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '291810a291b97e2df980cc669b7946b5') in 0.000937291 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000053 seconds.
-  path: Assets/StreamingAssets/BOData
-  artifactKey: Guid(6b01e7146ce60416eb5230cbdbf50285) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData using Guid(6b01e7146ce60416eb5230cbdbf50285) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '0d39efb7e05fb30a0f79ec05f05fc1bb') in 0.000884416 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000044 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_7
-  artifactKey: Guid(56a23cb22e56b4041acdad7a8075f952) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_7 using Guid(56a23cb22e56b4041acdad7a8075f952) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'c9cbeabe942ebe2d870ef46b09a34397') in 0.000888042 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000036 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Sprites/Default Sprites.png
-  artifactKey: Guid(a0fc465d6cf04254a2938578735e2383) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Sprites/Default Sprites.png using Guid(a0fc465d6cf04254a2938578735e2383) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '99123751a8a6e7cd26380e6225605f22') in 0.005595958 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000053 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/ReorderableAttribute.cs
-  artifactKey: Guid(af18777bcf6ae2c47a02c3ff8adabb0e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/ReorderableAttribute.cs using Guid(af18777bcf6ae2c47a02c3ff8adabb0e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '590830bc8e37a0bcc8d4487d3462f11f') in 0.001282792 seconds
+  Time since last request: 0.000180 seconds.
+  path: Assets/BOforUnity/Scripts/ExperimentConfig.cs
+  artifactKey: Guid(b456355f1c3684f398dcbef91a5eda7a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/ExperimentConfig.cs using Guid(b456355f1c3684f398dcbef91a5eda7a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '27102a6406585712e00eeed0cf627c70') in 0.002542916 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000073 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_84
-  artifactKey: Guid(3bcd3c4a957c54a988cb3c565e409abc) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_84 using Guid(3bcd3c4a957c54a988cb3c565e409abc) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '737561b9052d0be74b333919520c2760') in 0.001042042 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000084 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_66/ExecutionTimes.csv
-  artifactKey: Guid(4ae40a63af729419a8c3d9ce709dfd11) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_66/ExecutionTimes.csv using Guid(4ae40a63af729419a8c3d9ce709dfd11) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fdbb3580a12ceda6443ae876c8bed844') in 0.000912875 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000170 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_28/ExecutionTimes.csv
-  artifactKey: Guid(8258ed3d9ef0e424892cf881dbbd99c0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_28/ExecutionTimes.csv using Guid(8258ed3d9ef0e424892cf881dbbd99c0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'bc8ec41b2476890aa94931db211ca12a') in 0.000922041 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000064 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_76
-  artifactKey: Guid(7c53e9497f3fd41399c75a431cef43ef) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_76 using Guid(7c53e9497f3fd41399c75a431cef43ef) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '401b43cba58a1a405cbd8a39a52b0e78') in 0.000934458 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000066 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_69
-  artifactKey: Guid(5d931591b93c8410cb823b5cb9e9575d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_69 using Guid(5d931591b93c8410cb823b5cb9e9575d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3260e136a9a46d55f98a684dc43b03ac') in 0.001241375 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000051 seconds.
-  path: Assets/BOforUnity
-  artifactKey: Guid(d722b1fe6223d4c8fb159c3812b998c3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity using Guid(d722b1fe6223d4c8fb159c3812b998c3) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b3a7f940ad90720e74a60693f57d7a91') in 0.000783708 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000152 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Resources/Fonts & Materials
-  artifactKey: Guid(4f1e85c79acf49968737939ce8b445c7) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Resources/Fonts & Materials using Guid(4f1e85c79acf49968737939ce8b445c7) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b04c91caff0305cc7eff247633ee600c') in 0.000862333 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000054 seconds.
-  path: Assets/BOforUnity/Scripts/BoForUnityManager.cs
-  artifactKey: Guid(43e81b2355532462a98aa4ab2748c819) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Scripts/BoForUnityManager.cs using Guid(43e81b2355532462a98aa4ab2748c819) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '51ceb7ecfe6851688b874baabc3bbf13') in 0.001711708 seconds
+  Time since last request: 0.000177 seconds.
+  path: Assets/BOforUnity/Scripts/Optimizer.cs
+  artifactKey: Guid(698fb45f7d41a4c1fbe38400f716c906) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/Optimizer.cs using Guid(698fb45f7d41a4c1fbe38400f716c906) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'acea1947304067d5e46b2fea1ea4b520') in 0.00432975 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000060 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_21/ExecutionTimes.csv
-  artifactKey: Guid(b43b1a2fbb5524502af5b5dd61595468) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_21/ExecutionTimes.csv using Guid(b43b1a2fbb5524502af5b5dd61595468) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '43b27dc0b8aca69fc599bfa9fa7afd73') in 0.001249208 seconds
+  Time since last request: 0.000334 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTCheckboxes.cs
+  artifactKey: Guid(89bfad7ee6f402c4faf67c8fdf8a3d4a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTCheckboxes.cs using Guid(89bfad7ee6f402c4faf67c8fdf8a3d4a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3eb22f4133f8120612ad2f69c738b5b1') in 0.005478292 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000060 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_34
-  artifactKey: Guid(ea774e568654c4f7097f5d2318ca4e4c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_34 using Guid(ea774e568654c4f7097f5d2318ca4e4c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'db4f0c438b0e39447a8ebd93c3881d39') in 0.000926875 seconds
+  Time since last request: 0.000086 seconds.
+  path: Assets/BOforUnity/Scenes/BO-example-scene.unity
+  artifactKey: Guid(d66c96e610a184ebe82879e23c8a1415) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scenes/BO-example-scene.unity using Guid(d66c96e610a184ebe82879e23c8a1415) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'af3a285a0f084595361ac0d1c987c7ea') in 0.012570583 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000148 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser
-  artifactKey: Guid(57e25b4a578dba94c9353f4633b20549) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser using Guid(57e25b4a578dba94c9353f4633b20549) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '49592b92cc5a7e4e094bd9abbe8d304c') in 0.0008955 seconds
+  Time since last request: 0.000052 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTQuestionnaireManager.cs
+  artifactKey: Guid(8cf4b7804dbb43a4a13ac09f04b4a7fb) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTQuestionnaireManager.cs using Guid(8cf4b7804dbb43a4a13ac09f04b4a7fb) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '0348c5942cc0ace92f0ca6abfa36cb59') in 0.002159833 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000122 seconds.
-  path: Assets/TextMesh Pro/Resources/Sprite Assets
-  artifactKey: Guid(512a49d95c0c4332bdd98131869c23c9) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Resources/Sprite Assets using Guid(512a49d95c0c4332bdd98131869c23c9) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'eed0ac89147abe8b4fafe2453167479b') in 0.000943208 seconds
+  Time since last request: 0.000224 seconds.
+  path: Assets/StreamingAssets/BOData/Installation/Windows/installation_python.bat
+  artifactKey: Guid(b9910047c3c0f4b9093c994b96930e1b) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/Installation/Windows/installation_python.bat using Guid(b9910047c3c0f4b9093c994b96930e1b) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'd34c868974038a264c8d4120d1220d17') in 0.001747292 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000044 seconds.
-  path: Assets/BOforUnity/Prefabs/BOControlCanvas.prefab
-  artifactKey: Guid(5d8ac030a12b3ac488a249cd232ba633) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Prefabs/BOControlCanvas.prefab using Guid(5d8ac030a12b3ac488a249cd232ba633) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f28daab7ea84c05692dbfe62e4124b45') in 0.068034125 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 83
+  Time since last request: 0.000128 seconds.
+  path: Assets/BOforUnity/Scripts/PythonStarter.cs
+  artifactKey: Guid(ddfca4f0c702e429fa6641ef401f5605) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scripts/PythonStarter.cs using Guid(ddfca4f0c702e429fa6641ef401f5605) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '30f552132071b9512421c3e07af26076') in 0.0014395 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000090 seconds.
-  path: Assets/TextMesh Pro/Shaders
-  artifactKey: Guid(e9f693669af91aa45ad615fc681ed29f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Shaders using Guid(e9f693669af91aa45ad615fc681ed29f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'e0ee253e7c569a01340a1a650edea26d') in 0.003617125 seconds
+  Time since last request: 0.000206 seconds.
+  path: Assets/StreamingAssets/BOData/Installation/requirements.txt
+  artifactKey: Guid(f2accb7b6b500434a8cfd3f2764462fe) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/Installation/requirements.txt using Guid(f2accb7b6b500434a8cfd3f2764462fe) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'bc24e619b2afb8ce6cb877b072de1e6d') in 0.001633084 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000151 seconds.
-  path: Assets/BOforUnity/Scripts
-  artifactKey: Guid(80b6ff9cdfa0d4fff83f9f0fec6134e9) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/BOforUnity/Scripts using Guid(80b6ff9cdfa0d4fff83f9f0fec6134e9) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '7ca7e38f736d06dd68db3d3512c12119') in 0.002662833 seconds
+  Time since last request: 0.000218 seconds.
+  path: Assets/BOforUnity/Scenes/BO-click-game.unity
+  artifactKey: Guid(209abf653ce104deb8f49dd7a9d17782) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Scenes/BO-click-game.unity using Guid(209abf653ce104deb8f49dd7a9d17782) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '4f31945e505c967df8914f49ffd251f6') in 0.012601583 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000082 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_92
-  artifactKey: Guid(e359197dba9554b2cb384e990fe361c0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_92 using Guid(e359197dba9554b2cb384e990fe361c0) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '1c2205742bd05238dd5b19807cbc56a7') in 0.002621375 seconds
+  Time since last request: 0.000068 seconds.
+  path: Assets/BOforUnity/Tests/PlayMode/MainThreadDispatcherPlayModeTests.cs
+  artifactKey: Guid(60b8a530e5fb7c149b3908a0da87abf4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/BOforUnity/Tests/PlayMode/MainThreadDispatcherPlayModeTests.cs using Guid(60b8a530e5fb7c149b3908a0da87abf4) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '66a0747fa71fcd633f538505413579d7') in 0.002177167 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000123 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_allB.cpython-311.pyc
+  artifactKey: Guid(eb1f49fa328614df2b183d2b90ac295d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_allB.cpython-311.pyc using Guid(eb1f49fa328614df2b183d2b90ac295d) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b90e0f858a628fbb293a5b9d9cfa8d2f') in 0.001434791 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000129 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_54
-  artifactKey: Guid(22bba14696aaa4c5085f50a054efaf9f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_54 using Guid(22bba14696aaa4c5085f50a054efaf9f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '17eccd70a80cf40a4b898ab5c588acff') in 0.001348208 seconds
+  Time since last request: 0.000208 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTMultipleChoice.cs
+  artifactKey: Guid(d06d6f984d37a5c408aa2dbb31f32fbb) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTMultipleChoice.cs using Guid(d06d6f984d37a5c408aa2dbb31f32fbb) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3637242da00d75763f90f4a067eaf14e') in 0.002910958 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000126 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_104
-  artifactKey: Guid(cc3a74bc9d5bd44eda4ea898e814f947) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_104 using Guid(cc3a74bc9d5bd44eda4ea898e814f947) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '0d0959df2ba7b09b87b127f1e0f84871') in 0.001165542 seconds
+  Time since last request: 0.000337 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTMultipleChoiceGrid.cs
+  artifactKey: Guid(8332a04e96bc5b74e886693704fe7eb8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTMultipleChoiceGrid.cs using Guid(8332a04e96bc5b74e886693704fe7eb8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '7f05fc202ca7a408424b91047434169a') in 0.002461791 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000137 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_118
-  artifactKey: Guid(f732784d64e0c4bca97dba689ce16cd5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_118 using Guid(f732784d64e0c4bca97dba689ce16cd5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '3eaa4e25452ece76935ce51539f6ea77') in 0.0010095 seconds
+  Time since last request: 0.000080 seconds.
+  path: Assets/StreamingAssets/BOData/Installation/Linux/install_python.sh
+  artifactKey: Guid(8f6e05c2822ea4c48bdb87f7561bcdb5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/Installation/Linux/install_python.sh using Guid(8f6e05c2822ea4c48bdb87f7561bcdb5) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '8932eb1202bd3b0fd5e4a09596451fe6') in 0.001939458 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000122 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_60
-  artifactKey: Guid(7b64cf0646f304b6cb994ad451454445) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_60 using Guid(7b64cf0646f304b6cb994ad451454445) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b09f333c12938f379455ebcf83d3fe20') in 0.000918084 seconds
+  Time since last request: 0.000160 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/QTQuestionPageManager.cs
+  artifactKey: Guid(48ee16a9afb73a94581e25103f453845) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/QTQuestionPageManager.cs using Guid(48ee16a9afb73a94581e25103f453845) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '2421b3dabf3590252405f060e321de5c') in 0.0030775 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.000081 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Scenes/21 - Script Example.unity
-  artifactKey: Guid(50f52f9274434ecfb34dd87f0836f323) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Scenes/21 - Script Example.unity using Guid(50f52f9274434ecfb34dd87f0836f323) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '6f77f55d99c823b744704d91c3236ac3') in 0.004159916 seconds
+  Time since last request: 0.000113 seconds.
+  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_allLongitudinal.cpython-311.pyc
+  artifactKey: Guid(8fb9fdc74ca3c4cd5962a3a74d7c343e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_allLongitudinal.cpython-311.pyc using Guid(8fb9fdc74ca3c4cd5962a3a74d7c343e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f9fe3dbce73fba0762345e8cfba84213') in 0.002660041 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
 
 ========================================================================
 Received Import Request.
-  Time since last request: 0.181749 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_12
-  artifactKey: Guid(bf6bb3b49fb074db988bfbbb40824c7f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_12 using Guid(bf6bb3b49fb074db988bfbbb40824c7f) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'f12f2ea4a223a0e522b8bebd7ab997ce') in 0.002087417 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+  Time since last request: 0.000400 seconds.
+  path: Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Linux/x86_64/libStandaloneFileBrowser.so
+  artifactKey: Guid(b8c465928f1784a3fac8dc3766f7201c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
+Start importing Assets/QuestionnaireToolkit/Scripts/StandaloneFileBrowser/Plugins/Linux/x86_64/libStandaloneFileBrowser.so using Guid(b8c465928f1784a3fac8dc3766f7201c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '771a6404ace4c66cf45d8315bd0fc36f') in 0.004472167 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
 ========================================================================
-Received Import Request.
-  Time since last request: 0.000065 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_138/ExecutionTimes.csv
-  artifactKey: Guid(3244eb7e0add640d4ac3867349f1e6d2) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_138/ExecutionTimes.csv using Guid(3244eb7e0add640d4ac3867349f1e6d2) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '93b6f2d81b0c146d5648168cc7a200f6') in 0.001008334 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
+Received Prepare
+Begin MonoManager ReloadAssembly
+Thread 0x170a9f000 may have been prematurely finalized
+Symbol file LoadedFromMemory is not a mono symbol file
+- Loaded All Assemblies, in  0.414 seconds
+Refreshing native plugins compatible for Editor in 0.18 ms, found 1 plugins.
+Native extension for OSXStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.299 seconds
+Domain Reload Profiling: 714ms
+	BeginReloadAssembly (175ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (16ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (34ms)
+	RebuildCommonClasses (36ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (19ms)
+	LoadAllAssembliesAndSetupDomain (169ms)
+		LoadAssemblies (194ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (47ms)
+			TypeCache.Refresh (6ms)
+				TypeCache.ScanAssembly (0ms)
+			BuildScriptInfoCaches (36ms)
+			ResolveRequiredComponents (2ms)
+	FinalizeReload (299ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (204ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (2ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (81ms)
+			ProcessInitializeOnLoadAttributes (89ms)
+			ProcessInitializeOnLoadMethodAttributes (28ms)
+			AfterProcessingInitializeOnLoad (1ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (3ms)
+Refreshing native plugins compatible for Editor in 0.28 ms, found 1 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 575 unused Assets / (15.5 KB). Loaded Objects now: 1179.
+Memory consumption went from 78.6 MB to 78.6 MB.
+Total: 5.963166 ms (FindLiveObjects: 0.079125 ms CreateObjectMapping: 0.021708 ms MarkObjects: 5.739708 ms  DeleteObjects: 0.122000 ms)
 
+Prepare: number of updated asset objects reloaded= 0
 ========================================================================
-Received Import Request.
-  Time since last request: 0.000040 seconds.
-  path: Assets/TextMesh Pro/Examples & Extras/Resources/Fonts & Materials/Bangers SDF - Drop Shadow.mat
-  artifactKey: Guid(f2dcf029949142e28b974630369c8b4e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/TextMesh Pro/Examples & Extras/Resources/Fonts & Materials/Bangers SDF - Drop Shadow.mat using Guid(f2dcf029949142e28b974630369c8b4e) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '2c3e1e72398e3e04dabeff1ef5f5913f') in 0.004808542 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+Received Prepare
+Begin MonoManager ReloadAssembly
+Thread 0x16f3a3000 may have been prematurely finalized
+Symbol file LoadedFromMemory is not a mono symbol file
+- Loaded All Assemblies, in  0.567 seconds
+Refreshing native plugins compatible for Editor in 0.23 ms, found 1 plugins.
+Native extension for OSXStandalone target not found
+[Package Manager] Failed to launch server process. Reason: Unity was launched with the -noUpm command-line argument
+[Package Manager] Unable to send message (not connected to server process).
+[Package Manager] Cannot connect to Unity Package Manager local server
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.530 seconds
+Domain Reload Profiling: 1099ms
+	BeginReloadAssembly (244ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (15ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (64ms)
+	RebuildCommonClasses (44ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (22ms)
+	LoadAllAssembliesAndSetupDomain (241ms)
+		LoadAssemblies (270ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (75ms)
+			TypeCache.Refresh (11ms)
+				TypeCache.ScanAssembly (0ms)
+			BuildScriptInfoCaches (46ms)
+			ResolveRequiredComponents (4ms)
+	FinalizeReload (531ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (376ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (2ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (116ms)
+			ProcessInitializeOnLoadAttributes (146ms)
+			ProcessInitializeOnLoadMethodAttributes (104ms)
+			AfterProcessingInitializeOnLoad (3ms)
+			EditorAssembliesLoaded (1ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (7ms)
+Refreshing native plugins compatible for Editor in 0.55 ms, found 1 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 575 unused Assets / (47.8 KB). Loaded Objects now: 1179.
+Memory consumption went from 78.5 MB to 78.5 MB.
+Total: 16.378000 ms (FindLiveObjects: 0.571875 ms CreateObjectMapping: 0.657958 ms MarkObjects: 14.716167 ms  DeleteObjects: 0.430875 ms)
 
-========================================================================
-Received Import Request.
-  Time since last request: 0.000028 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_57
-  artifactKey: Guid(7e9ca91a950a0428e90b101da898fae8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_57 using Guid(7e9ca91a950a0428e90b101da898fae8) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '469d5ad473d7a0f85fcd8c78e277295e') in 0.00114175 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000050 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_33
-  artifactKey: Guid(2b7b7bff5080648dc9472906dcdfbca6) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_33 using Guid(2b7b7bff5080648dc9472906dcdfbca6) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '24702dc783fb61cae913878456ec30be') in 0.000827375 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000071 seconds.
-  path: Assets/QuestionnaireToolkit/Scripts/MemberReflection/Controls
-  artifactKey: Guid(3c50ffbb86b155f4ba9846ef3a501e4c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/QuestionnaireToolkit/Scripts/MemberReflection/Controls using Guid(3c50ffbb86b155f4ba9846ef3a501e4c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'dbdbd16b28996ecd27a5fc538c8c0055') in 0.000783792 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000039 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_55
-  artifactKey: Guid(e29e10ec714fb4e0ab6b81852833e90c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_55 using Guid(e29e10ec714fb4e0ab6b81852833e90c) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'a175dc13050dd7ce0663f3745696ea3d') in 0.000943084 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000041 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_28
-  artifactKey: Guid(f98332af2923041d7baffbd7aa97fd3a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_28 using Guid(f98332af2923041d7baffbd7aa97fd3a) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'fec2396b5e09d91e49bd88632dde315f') in 0.001007709 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000048 seconds.
-  path: Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-312.pyc
-  artifactKey: Guid(e830d05d3b7007d4ab56690c8022fcee) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/BayesianOptimization/__pycache__/import_all.cpython-312.pyc using Guid(e830d05d3b7007d4ab56690c8022fcee) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'c9680d2b2c2fe9af2598201f752baf2d') in 0.000926291 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000108 seconds.
-  path: Assets/StreamingAssets/BOData/LogData/-1_114
-  artifactKey: Guid(0a9a4800341d0427e823d575db90b822) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/StreamingAssets/BOData/LogData/-1_114 using Guid(0a9a4800341d0427e823d575db90b822) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '594c32c636f3f01d8c38126285303c94') in 0.000831708 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000054 seconds.
-  path: Assets
-  artifactKey: Guid(00000000000000001000000000000000) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets using Guid(00000000000000001000000000000000) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: 'b1100ae889722cad9db81528d1736376') in 0.000719209 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
-========================================================================
-Received Import Request.
-  Time since last request: 0.000037 seconds.
-  path: Assets/_Recovery/0.unity
-  artifactKey: Guid(d6d51ae29cf87450780b8c4b25fbf041) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d)
-Start importing Assets/_Recovery/0.unity using Guid(d6d51ae29cf87450780b8c4b25fbf041) Importer(2089858483,b0f066a214c2f5e87bad3c948f4d605d) (ScriptedImporter) -> (artifact id: '7b4b6649426da4baee61f8f2f5ef3e32') in 0.005964375 seconds
-Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 1
-
+Prepare: number of updated asset objects reloaded= 0

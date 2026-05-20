@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639148793320000000
-    m_Hash: 2930046329
+      ticks: 639148796510000000
+    m_Hash: 2151318640
   m_LockFileStatus:
     m_FilePath: /Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 639148793320000000
-    m_Hash: 366123887
+      ticks: 639148796510000000
+    m_Hash: 2430276336
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:
@@ -22,12 +22,12 @@ m_LocalPackages:
 m_ProjectPath: /Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Packages
 m_EditorVersion: 6000.3.11f1 (3000ef702840)
 m_ResolvedPackages:
-- packageId: com.unity.ide.rider@3.0.40
+- packageId: com.unity.ide.rider@3.0.39
   testable: 0
   isDirectDependency: 1
-  version: 3.0.40
+  version: 3.0.39
   source: 1
-  resolvedPath: /Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ide.rider@e4950c6d131b
+  resolvedPath: /Users/violetvwv/Desktop/Bayesian-Optimization-for-Unity/Library/PackageCache/com.unity.ide.rider@4504839d03f7
   assetPath: Packages/com.unity.ide.rider
   name: com.unity.ide.rider
   displayName: JetBrains Rider Editor
@@ -121,13 +121,13 @@ m_ResolvedPackages:
   entitlements:
     licensingModel: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 639117612635980000
+  datePublishedTicks: 639045875071620000
   documentationUrl: https://docs.unity3d.com/Packages/com.unity.ide.rider@3.0/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/com.unity.ide.rider.git
-    revision: ac65c165e102e0e3a75f1448b8578d29ba0eaf58
+    revision: 4da98b83c4f1de974829959526a470c26a8fa9f4
     path: 
   unityLifecycle:
     version: 3.0.39
@@ -141,8 +141,8 @@ m_ResolvedPackages:
   git:
     hash: 
     revision: 
-  upmReserved: '{"changelog":"- Normalise paths for additional files for roslyn,
-    fixes RIDER-136169 Roslyn process gets stuck"}'
+  upmReserved: '{"changelog":"- fix the indent of the LinkButton\n- fix project generation
+    to avoid attempts to restore NuGet packages (with some of the MSBuild versions)"}'
   signature:
     status: 1
     reason: Signature is ok
@@ -156,7 +156,7 @@ m_ResolvedPackages:
     errorCode: 
   assetStore:
     productId: 
-  fingerprint: e4950c6d131b925f19dd0b34bdf800110120f8de
+  fingerprint: 4504839d03f7a5a4495357084a0ffd6e439892cf
   editorCompatibility:
     compatibilityLevel: 0
     minimumPackageVersion: 3.0.39
