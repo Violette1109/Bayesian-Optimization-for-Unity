@@ -279,15 +279,9 @@ namespace BOforUnity.Examples
             statusFontSize = Mathf.Max(1, statusFontSize);
             targetLabelFontSize = Mathf.Max(1, targetLabelFontSize);
             boOptimizationIterations = Mathf.Max(0, boOptimizationIterations);
-<<<<<<< HEAD
-
-            // Clamp X marker multiplier; the [Range] attribute already enforces this in the
-            // Inspector slider, but clamping here keeps programmatic changes valid too.
-            xMarkerSizeMultiplier = Mathf.Clamp(xMarkerSizeMultiplier, 0.1f, 1.5f);
-=======
+            xMarkerSizeMultiplier = Mathf.Clamp(xMarkerSizeMultiplier, 0.1f, 1f);
             EnsureButtonDistanceRangeSupportsNoOverlap();
             EnsureQuestionnairePerformanceCsvItems();
->>>>>>> upstream/main
         }
 
         private IEnumerator WaitForBoEvaluationStart()

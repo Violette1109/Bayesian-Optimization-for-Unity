@@ -14,12 +14,7 @@ import numpy as np
 import pandas as pd
 
 
-<<<<<<< HEAD
-CURRENT_FILE = pathlib.Path(__file__).resolve()
-REPO_ROOT = CURRENT_FILE.parent.parent
-=======
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
->>>>>>> upstream/main
 MOBO_PATH = REPO_ROOT / "Assets/StreamingAssets/BOData/BayesianOptimization/mobo.py"
 
 
