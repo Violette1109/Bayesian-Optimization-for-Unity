@@ -1,3 +1,8 @@
+# mobo.py — multi-objective Bayesian Optimization (NDJSON protocol)
+# Uses qLogNoisyExpectedHypervolumeImprovement.
+# Logs observations to ObservationsPerEvaluation.csv ('IsPareto' flag) and
+# hypervolume metric to HypervolumePerEvaluation.csv.
+
 import json
 import socket
 import time
@@ -53,6 +58,13 @@ parameter_names = []
 objective_names = []
 parameters_info = []   # [(lo, hi)]
 objectives_info = []   # [(lo, hi, minimizeFlag)]
+
+# 加上這四行全域變數，用來動態儲存 Unity 面板傳過來的實驗條件
+SLIDER_RESOLUTION = 5
+IS_WARM_START = False
+SHOW_PRIOR_HINT = False
+SAMPLING_ROUNDS = 10
+RANDOM_ALLOCATION = False
 
 # device
 tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
@@ -115,7 +127,6 @@ def recv_json_message(conn):
                 return json.loads(line)
             except json.JSONDecodeError as e:
                 preview = line[:200]
-                # Keep the reader tolerant to non-critical malformed lines.
                 print(
                     f"Warning: skipping malformed JSON line from Unity: {e}. Payload preview: {preview!r}",
                     flush=True,
@@ -130,7 +141,6 @@ def recv_json_message(conn):
             if SOCKET_RECV_BUF.strip():
                 trailing = SOCKET_RECV_BUF
                 SOCKET_RECV_BUF = ""
-                # NDJSON requires newline framing. On close, remaining bytes are trailing partial data.
                 preview = trailing[-200:].replace("\n", "\\n")
                 print("Warning: discarding trailing unterminated socket data:", preview, flush=True)
             return None
@@ -240,8 +250,11 @@ def denormalize_to_original_obj(v_m1p1, lo, hi, smaller_is_better):
     v = -v_m1p1 if int(smaller_is_better) == 1 else v_m1p1
     return np.round(lo + (v + 1) * 0.5 * (hi - lo), 3)
 
+# 修正 1：擴充欄位定義，加入四個實驗設計欄位 (多目標保留 IsPareto)
 def expected_observation_columns():
-    return ['UserID','ConditionID','GroupID','Timestamp','Iteration','Phase','IsPareto'] + objective_names + parameter_names
+    return [
+        'UserID', 'ConditionID', 'GroupID', 'Timestamp', 'Iteration', 'Phase', 'IsBest', 'IsWarmStart', 'ShowPriorHint', 'RandomAllocation'  # <-- 欄位追蹤全面解鎖
+    ] + objective_names + parameter_names
 
 def normalize_param_column(col, lo, hi):
     col = np.asarray(col, dtype=np.float64)
@@ -261,7 +274,6 @@ def normalize_param_column(col, lo, hi):
     if in_raw_range:
         return np.clip((col - lo) / (hi - lo), 0.0, 1.0)
     if in_norm_range:
-        # Fallback for previously normalized warm-start files.
         return np.clip(col, 0.0, 1.0)
     raise ValueError(
         f"Warm-start parameter values must be within raw bounds [{lo}, {hi}] or normalized [0,1], "
@@ -313,7 +325,6 @@ def normalize_obj_column(col, lo, hi, minflag):
             if int(minflag) == 1:
                 y = -y
     elif in_norm_range:
-        # already normalized
         y = np.clip(col, -1.0, 1.0)
         if WARM_START_OBJECTIVE_FORMAT == "normalized_native" and int(minflag) == 1:
             y = -y
@@ -326,7 +337,6 @@ def normalize_obj_column(col, lo, hi, minflag):
 
 # -------------------- protocol parsing --------------------
 def parse_param_init(init_val):
-    # Accept typed JSON: {"low": ..., "high": ...}
     if isinstance(init_val, dict):
         if "low" not in init_val or "high" not in init_val:
             raise ValueError(f"Parameter init parse error (missing 'low'/'high'): {init_val}")
@@ -337,7 +347,6 @@ def parse_param_init(init_val):
     return float(parts[0]), float(parts[1])
 
 def parse_obj_init(init_val):
-    # Accept typed JSON: {"low": ..., "high": ..., "minimize": 0/1}
     if isinstance(init_val, dict):
         if "low" not in init_val or "high" not in init_val:
             raise ValueError(f"Objective init parse error (missing 'low'/'high'): {init_val}")
@@ -377,7 +386,6 @@ def objective_function(conn, x_tensor):
     values = {}
     for i, name in enumerate(parameter_names):
         lo, hi = parameters_info[i]
-        # Keep full precision for optimizer-proposed points sent to Unity.
         values[name] = denormalize_to_original_param(x[i], lo, hi, decimals=None)
 
     payload = {"type": "parameters", "values": values}
@@ -436,6 +444,13 @@ def generate_initial_data(conn, n_samples):
     train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
     print("Initial Sobol X in [0,1]:", train_x, flush=True)
 
+    # 修正 2：多目標採樣階段，同步讀取全域變數，確保 15 輪對照組格式一致
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    slider_res = globals().get('SLIDER_RESOLUTION', 5)
+    is_ws = str(globals().get('IS_WARM_START', False)).upper()
+    show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
+    sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
+
     train_obj = []
     for i, x in enumerate(train_x):
         print(f"---- Initial Sample {i+1}", flush=True)
@@ -446,15 +461,18 @@ def generate_initial_data(conn, n_samples):
         y_np = y.cpu().numpy()
         x_den = [denormalize_to_original_param(x_np[j], parameters_info[j][0], parameters_info[j][1]) for j in range(PROBLEM_DIM)]
         y_den = [denormalize_to_original_obj(y_np[j], objectives_info[j][0], objectives_info[j][1], objectives_info[j][2]) for j in range(NUM_OBJS)]
+        
+        # 修正 3：對齊新欄位，將 4 個變數塞入 row 中
         row = [USER_ID, CONDITION_ID, GROUP_ID,
                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-               i+1, 'sampling', 'FALSE', *y_den, *x_den]
+               i+1, 'sampling', 'FALSE',
+               slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
+               *y_den, *x_den]
         with open(obs_csv, 'a', newline='') as f:
             csv.writer(f, delimiter=';').writerow(row)
         send_json_line(conn, {"type": "tempCoverage", "value": float(i+1)/float(max(1,n_samples))})
 
     Y = torch.stack(train_obj, dim=0).to(dtype=torch.double)
-    # Ensure sampling-only runs (N_ITERATIONS=0) have globally-correct IsPareto flags.
     pareto_flags = ['TRUE' if b else 'FALSE' for b in is_non_dominated(Y).tolist()]
     if pareto_flags:
         df = pd.read_csv(obs_csv, delimiter=';')
@@ -568,9 +586,18 @@ def save_xy(x_sample, y_sample, iteration):
         cols = expected_observation_columns()
         df = pd.DataFrame(columns=cols)
 
+    # 修正 4：多目標優化階段，讀取全域變數
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    slider_res = globals().get('SLIDER_RESOLUTION', 5)
+    is_ws = str(globals().get('IS_WARM_START', False)).upper()       
+    show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
+    sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
+
+    # 修正 5：組裝 row 資料結構，補齊這 4 個變數，確保與採樣格式完全相同
     new_row = pd.DataFrame([[USER_ID, CONDITION_ID, GROUP_ID,
                              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                              iteration_index, 'optimization', 'FALSE',
+                             slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
                              *y_np[-1], *x_np[-1]]], columns=df.columns)
 
     if df.empty:
@@ -578,7 +605,6 @@ def save_xy(x_sample, y_sample, iteration):
     else:
         df = pd.concat([df, new_row], ignore_index=True)
 
-    # Update IsPareto for the current run tail while preserving any older, unrelated rows.
     flags = ['TRUE' if b else 'FALSE' for b in is_non_dominated(y_sample).tolist()]
     df['IsPareto'] = df['IsPareto'].astype(str)
     if len(flags) >= len(df):
@@ -716,6 +742,13 @@ def main():
         CSV_PATH_PARAMETERS = str(cfg.get("initialParametersDataPath") or "")
         CSV_PATH_OBJECTIVES = str(cfg.get("initialObjectivesDataPath") or "")
         WARM_START_OBJECTIVE_FORMAT = str(cfg.get("warmStartObjectiveFormat", WARM_START_OBJECTIVE_FORMAT) or "auto").strip().lower()
+
+        # 修正 6：在 init 成功對接時，強迫將 Unity 發送的 JSON 配置參數寫入 Python 全域變數
+        globals()['SLIDER_RESOLUTION'] = get_cfg_int(cfg, "sliderResolution", default=5)
+        globals()['IS_WARM_START']     = bool(cfg.get("warmStart", False))
+        globals()['SHOW_PRIOR_HINT']   = bool(cfg.get("showPriorHint", False))
+        globals()['SAMPLING_ROUNDS']   = get_cfg_int(cfg, "numSamplingIterations", default=10)
+        globals()['RANDOM_ALLOCATION'] = bool(cfg.get("randomAllocation", False))  # <-- 對齊
 
         if WARM_START_OBJECTIVE_FORMAT not in ("auto", "raw", "normalized_max", "normalized_native"):
             raise ValueError(

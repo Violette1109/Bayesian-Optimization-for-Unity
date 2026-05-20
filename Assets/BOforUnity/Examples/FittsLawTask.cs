@@ -99,6 +99,14 @@ namespace BOforUnity.Examples
         public Color targetLabelColor = Color.white;
         [Min(1)] public int targetLabelFontSize = 22;
 
+        [Header("X Marker")]
+        public bool showXMarker = true;
+        public Color xMarkerColor = new Color(1f, 1f, 1f, 0.85f);
+        /// <summary>
+        /// X font size as a multiplier of circleSizePixels. 0.5 = half the circle diameter.
+        /// </summary>
+        [Range(0.1f, 1f)] public float xMarkerSizeMultiplier = 0.5f;
+
         [Header("Interaction")]
         public bool countWrongTargetClicks = true;
         public bool countPlayAreaMissClicks = true;
@@ -138,6 +146,9 @@ namespace BOforUnity.Examples
         private readonly List<Button> _targetButtons = new List<Button>();
         private readonly List<RectTransform> _targetRects = new List<RectTransform>();
         private readonly List<int> _targetSequence = new List<int>();
+
+        // Parallel list of X marker text elements, one per target circle.
+        private readonly List<TextMeshProUGUI> _xMarkers = new List<TextMeshProUGUI>();
 
         private Canvas _canvas;
         private RectTransform _playArea;
@@ -212,6 +223,10 @@ namespace BOforUnity.Examples
             taskCompletionObjectiveIndex = Mathf.Max(0, taskCompletionObjectiveIndex);
             accuracyObjectiveIndex = Mathf.Max(0, accuracyObjectiveIndex);
             boOptimizationIterations = Mathf.Max(0, boOptimizationIterations);
+
+            // Clamp X marker multiplier; the [Range] attribute already enforces this in the
+            // Inspector slider, but clamping here keeps programmatic changes valid too.
+            xMarkerSizeMultiplier = Mathf.Clamp(xMarkerSizeMultiplier, 0.1f, 1.5f);
         }
 
         private IEnumerator WaitForBoEvaluationStart()
@@ -638,6 +653,7 @@ namespace BOforUnity.Examples
             _targetImages.Clear();
             _targetButtons.Clear();
             _targetRects.Clear();
+            _xMarkers.Clear();
 
             float effectiveRadius = GetEffectiveRingRadius();
             for (int i = 0; i < targetCount; i++)
@@ -674,10 +690,40 @@ namespace BOforUnity.Examples
                 if (showTargetLabels)
                     CreateTargetLabel(targetObject.transform, i + 1);
 
+                // --- X Marker ---
+                TextMeshProUGUI xMarker = CreateXMarker(targetRect);
+                _xMarkers.Add(xMarker);
+
                 _targetImages.Add(image);
                 _targetButtons.Add(button);
                 _targetRects.Add(targetRect);
             }
+        }
+
+        /// <summary>
+        /// Creates a centered "X" text child on the given target RectTransform and
+        /// returns the TextMeshProUGUI component. Visibility is controlled separately
+        /// via <see cref="UpdateXMarkerVisuals"/>.
+        /// </summary>
+        private TextMeshProUGUI CreateXMarker(RectTransform targetRect)
+        {
+            GameObject markerObject = CreateUiObject("X Marker", targetRect);
+            RectTransform markerRect = markerObject.GetComponent<RectTransform>();
+            StretchToParent(markerRect);
+
+            TextMeshProUGUI label = markerObject.AddComponent<TextMeshProUGUI>();
+            label.text = "X";
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = xMarkerColor;
+            // Font size is derived from the circle diameter so it scales with circle size.
+            label.fontSize = Mathf.Max(1f, circleSizePixels * xMarkerSizeMultiplier);
+            label.fontStyle = FontStyles.Bold;
+            label.raycastTarget = false;
+
+            // Always start hidden; UpdateXMarkerVisuals() enables it on the correct target.
+            label.gameObject.SetActive(false);
+
+            return label;
         }
 
         private void CreateTargetLabel(Transform parent, int labelIndex)
@@ -842,6 +888,9 @@ namespace BOforUnity.Examples
                 _targetButtons[i].interactable = false;
             }
 
+            // Task complete: hide the X (no target left to click).
+            UpdateXMarkerVisuals(highlightedIndex: -1, taskDone: false);
+
             UpdateStatusText();
             ShowMentalDemandQuestion();
         }
@@ -958,6 +1007,34 @@ namespace BOforUnity.Examples
                 bool isCurrentTarget = i == _currentTargetIndex;
                 _targetImages[i].color = isCurrentTarget ? highlightedTargetColor : targetColor;
                 _targetButtons[i].interactable = true;
+            }
+
+            UpdateXMarkerVisuals(_currentTargetIndex, taskDone: false);
+        }
+
+        /// <summary>
+        /// Refreshes the active state and colour of every X marker.
+        /// The X is shown only on <paramref name="highlightedIndex"/>; all others are hidden.
+        /// Pass -1 to hide all markers (e.g. when the task is complete).
+        /// </summary>
+        private void UpdateXMarkerVisuals(int highlightedIndex, bool taskDone)
+        {
+            for (int i = 0; i < _xMarkers.Count; i++)
+            {
+                TextMeshProUGUI marker = _xMarkers[i];
+                if (marker == null)
+                    continue;
+
+                // X is shown only on the currently highlighted target.
+                // When the task is done (highlightedIndex == -1) all markers hide.
+                bool visible = showXMarker && i == highlightedIndex;
+
+                marker.gameObject.SetActive(visible);
+
+                // Always keep colour and size in sync in case Inspector values were
+                // changed at runtime (e.g. during Play mode tweaking).
+                marker.color = xMarkerColor;
+                marker.fontSize = Mathf.Max(1f, circleSizePixels * xMarkerSizeMultiplier);
             }
         }
 
@@ -1223,6 +1300,7 @@ namespace BOforUnity.Examples
             _targetImages.Clear();
             _targetButtons.Clear();
             _targetRects.Clear();
+            _xMarkers.Clear();
         }
 
         private void RestoreCursor()

@@ -58,6 +58,13 @@ objective_names = []
 parameters_info = []   # [(lo, hi)]
 objectives_info = []   # [(lo, hi, minimizeFlag)]  # minimizeFlag==1 means minimize in original scale
 
+# 🟢 加上這四行全域變數，用來動態儲存 Unity 面板傳過來的實驗條件
+SLIDER_RESOLUTION = 5
+IS_WARM_START = False
+SHOW_PRIOR_HINT = False
+SAMPLING_ROUNDS = 10
+RANDOM_ALLOCATION = False
+
 # device
 tkwargs = {"dtype": torch.double, "device": torch.device("cpu")}
 device = torch.device("cpu")
@@ -112,7 +119,6 @@ def recv_json_message(conn):
                 return json.loads(line)
             except json.JSONDecodeError as e:
                 preview = line[:200]
-                # Keep the reader tolerant to non-critical malformed lines.
                 print(
                     f"Warning: skipping malformed JSON line from Unity: {e}. Payload preview: {preview!r}",
                     flush=True,
@@ -201,7 +207,6 @@ def normalize_param_column(col, lo, hi):
     if in_raw_range:
         return np.clip((col - lo) / (hi - lo), 0.0, 1.0)
     if in_norm_range:
-        # Fallback for previously normalized warm-start files.
         return np.clip(col, 0.0, 1.0)
     raise ValueError(
         f"Warm-start parameter values must be within raw bounds [{lo}, {hi}] or normalized [0,1], "
@@ -254,7 +259,6 @@ def normalize_obj_column(col, lo, hi, minflag):
             if int(minflag) == 1:
                 y = -y
     elif in_norm_range:
-        # already normalized
         y = np.clip(col, -1.0, 1.0)
         if WARM_START_OBJECTIVE_FORMAT == "normalized_native" and int(minflag) == 1:
             y = -y
@@ -266,8 +270,11 @@ def normalize_obj_column(col, lo, hi, minflag):
     return np.clip(y, -1.0, 1.0)
 
 
+# 修正 1：明確擴充欄位，加入四個實驗設計欄位 (Metadata)
 def expected_observation_columns():
-    return ['UserID','ConditionID','GroupID','Timestamp','Iteration','Phase','IsBest'] + objective_names + parameter_names
+    return [
+        'UserID', 'ConditionID', 'GroupID', 'Timestamp', 'Iteration', 'Phase', 'IsBest', 'IsWarmStart', 'ShowPriorHint', 'RandomAllocation'# <-- 欄位身分證
+    ] + objective_names + parameter_names
 
 # -------------------- protocol parsing --------------------
 def parse_param_init(init_val):
@@ -331,7 +338,6 @@ def objective_function(conn, x_tensor):
     if not isinstance(resp, dict):
         raise TypeError(f"Unity objectives payload must be a dict, got {type(resp).__name__}")
 
-    # normalize to [-1,1] and maximize
     name = objective_names[0]
     missing = [k for k in objective_names if k not in resp]
     if missing:
@@ -368,13 +374,19 @@ def generate_initial_data(conn, n_samples):
 
     obs_csv = os.path.join(PROJECT_PATH, "ObservationsPerEvaluation.csv")
     if not os.path.exists(obs_csv):
-        # NOTE: 'IsBest' replaces 'IsPareto'
         header = expected_observation_columns()
         with open(obs_csv, 'w', newline='') as f:
             csv.writer(f, delimiter=';').writerow(header)
 
     train_x = draw_sobol_samples(bounds=problem_bounds, n=1, q=n_samples, seed=SEED).squeeze(0)
     print("Initial Sobol X in [0,1]:", train_x, flush=True)
+
+    # 修正 2：在採樣階段同步讀取全域變數，確保純採樣組（15 輪對照組）欄位對齊不報錯！
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    slider_res = globals().get('SLIDER_RESOLUTION', 5)
+    is_ws = str(globals().get('IS_WARM_START', False)).upper()
+    show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
+    sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
 
     train_obj = []
     best_so_far = -1e9
@@ -385,24 +397,24 @@ def generate_initial_data(conn, n_samples):
 
         x_np = x.cpu().numpy()
         y_np = y.cpu().numpy()  # normalized [-1,1]
-        # denormalize objective back to original scale for logging
         y_den = denormalize_to_original_obj(y_np[0], objectives_info[0][0], objectives_info[0][1], objectives_info[0][2])
         x_den = [denormalize_to_original_param(x_np[j], parameters_info[j][0], parameters_info[j][1]) for j in range(PROBLEM_DIM)]
 
-        # Provisional IsBest flag (best-so-far); recomputed globally after sampling finishes.
         is_best = float(y_np[0]) > best_so_far + 1e-12
         if is_best:
             best_so_far = float(y_np[0])
 
+        # 修正 3：採樣階段的 row 資料結構同步塞入這 4 個變數
         row = [USER_ID, CONDITION_ID, GROUP_ID,
                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-               i+1, 'sampling', 'TRUE' if is_best else 'FALSE', y_den, *x_den]
+               i+1, 'sampling', 'TRUE' if is_best else 'FALSE',
+               slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
+               y_den, *x_den]
         with open(obs_csv, 'a', newline='') as f:
             csv.writer(f, delimiter=';').writerow(row)
 
         send_json_line(conn, {"type": "tempCoverage", "value": float(i+1)/float(max(1,n_samples))})
 
-    # Ensure sampling-only runs (N_ITERATIONS=0) have globally-correct IsBest flags.
     if train_obj:
         vals_norm = [float(t.item()) for t in train_obj]
         best_norm = max(vals_norm)
@@ -480,7 +492,6 @@ def optimize_candidates(model, sampler):
         model=model,
         X_baseline=X_baseline,
         sampler=sampler,
-        # tau=1e-3,  # optional smoothing
     )
     candidates, _ = optimize_acqf(
         acq_function=acq,
@@ -491,7 +502,7 @@ def optimize_candidates(model, sampler):
         options={"batch_limit": 5, "maxiter": 200},
         sequential=True,
     )
-    return candidates.detach()  # in [0,1]
+    return candidates.detach()
 
 # -------------------- logging --------------------
 def save_xy(x_sample, y_sample, iteration):
@@ -518,9 +529,18 @@ def save_xy(x_sample, y_sample, iteration):
         cols = expected_observation_columns()
         df = pd.DataFrame(columns=cols)
 
+    # 修正 4：優化階段讀取全域變數
+    global SLIDER_RESOLUTION, IS_WARM_START, SHOW_PRIOR_HINT, SAMPLING_ROUNDS
+    slider_res = globals().get('SLIDER_RESOLUTION', 5)
+    is_ws = str(globals().get('IS_WARM_START', False)).upper()       
+    show_hint = str(globals().get('SHOW_PRIOR_HINT', False)).upper()
+    sampling_rds = globals().get('SAMPLING_ROUNDS', 10)
+
+    # 修正 5：優化階段的 row 資料結構同樣塞入這 4 個變數，確保前後格式完全一致
     new_row = pd.DataFrame([[USER_ID, CONDITION_ID, GROUP_ID,
                              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                              iteration_index, 'optimization', 'FALSE',
+                             slider_res, is_ws, show_hint, sampling_rds, # <-- 塞在這裡
                              y_np[-1][0], *x_np[-1]]], columns=df.columns)
     if df.empty:
         df = new_row.copy()
@@ -555,7 +575,6 @@ def save_metric_to_file(metric_values, iteration):
             w.writerow(["BestObjective", "Run"])
         w.writerow([metric_values[-1], iteration])
 
-    # Legacy mirror for older analysis scripts that still read this file.
     write_legacy_header = not os.path.exists(legacy_csv) or os.path.getsize(legacy_csv) == 0
     with open(legacy_csv, 'a', newline='') as f:
         w = csv.writer(f, delimiter=';')
@@ -644,7 +663,6 @@ def main():
         conn.settimeout(SOCKET_TIMEOUT_SEC)
         SOCKET_RECV_BUF = ""
 
-        # receive init
         init_msg = None
         while True:
             msg = recv_json_message(conn)
@@ -675,6 +693,13 @@ def main():
         WARM_START_OBJECTIVE_FORMAT = str(
             cfg.get("warmStartObjectiveFormat", WARM_START_OBJECTIVE_FORMAT) or "auto"
         ).strip().lower()
+
+        # 修正 6：在 init 成功對接時，強迫將 Unity 發送的 JSON 配置參數寫入 Python 全域變數
+        globals()['SLIDER_RESOLUTION'] = get_cfg_int(cfg, "sliderResolution", default=5)
+        globals()['IS_WARM_START']     = bool(cfg.get("warmStart", False))
+        globals()['SHOW_PRIOR_HINT']   = bool(cfg.get("showPriorHint", False))
+        globals()['SAMPLING_ROUNDS']   = get_cfg_int(cfg, "numSamplingIterations", default=10)
+        globals()['RANDOM_ALLOCATION'] = bool(cfg.get("randomAllocation", False))
 
         if PROBLEM_DIM < 1:
             raise ValueError(f"nParameters must be >= 1, got {PROBLEM_DIM}")
@@ -744,7 +769,6 @@ def main():
             if int(minflag) not in (0, 1):
                 raise ValueError(f"Objective '{objective_names[i]}' minimize flag must be 0 or 1, got {minflag}")
 
-        # normalized search box [0,1]^d
         problem_bounds = torch.stack(
             [torch.zeros(PROBLEM_DIM, dtype=torch.double),
              torch.ones (PROBLEM_DIM, dtype=torch.double)],
