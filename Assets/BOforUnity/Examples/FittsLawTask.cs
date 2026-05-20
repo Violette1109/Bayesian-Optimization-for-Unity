@@ -934,11 +934,8 @@ namespace BOforUnity.Examples
             _targetImages.Clear();
             _targetButtons.Clear();
             _targetRects.Clear();
-<<<<<<< HEAD
-            _xMarkers.Clear();
-=======
             _targetXLabels.Clear();
->>>>>>> upstream/main
+            _xMarkers.Clear();
 
             ApplyLayoutSafetyConstraints();
             float effectiveRadius = GetEffectiveRingRadius();
@@ -976,14 +973,10 @@ namespace BOforUnity.Examples
                 if (showTargetLabels)
                     CreateTargetLabel(targetObject.transform, i + 1);
 
-<<<<<<< HEAD
-                // --- X Marker ---
-                TextMeshProUGUI xMarker = CreateXMarker(targetRect);
-                _xMarkers.Add(xMarker);
-=======
-                if (showTargetX)
+                if (showXMarker)
+                    _xMarkers.Add(CreateXMarker(targetRect));
+                else if (showTargetX)
                     _targetXLabels.Add(CreateTargetXLabel(targetObject.transform));
->>>>>>> upstream/main
 
                 _targetImages.Add(image);
                 _targetButtons.Add(button);
@@ -991,7 +984,6 @@ namespace BOforUnity.Examples
             }
         }
 
-<<<<<<< HEAD
         /// <summary>
         /// Creates a centered "X" text child on the given target RectTransform and
         /// returns the TextMeshProUGUI component. Visibility is controlled separately
@@ -1007,15 +999,16 @@ namespace BOforUnity.Examples
             label.text = "X";
             label.alignment = TextAlignmentOptions.Center;
             label.color = xMarkerColor;
-            // Font size is derived from the circle diameter so it scales with circle size.
-            label.fontSize = Mathf.Max(1f, circleSizePixels * xMarkerSizeMultiplier);
+            label.fontSize = Mathf.Max(1f, xFontSizePixels);
             label.fontStyle = FontStyles.Bold;
             label.raycastTarget = false;
 
             // Always start hidden; UpdateXMarkerVisuals() enables it on the correct target.
             label.gameObject.SetActive(false);
 
-=======
+            return label;
+        }
+
         private TextMeshProUGUI CreateTargetXLabel(Transform parent)
         {
             GameObject labelObject = CreateUiObject("Target X", parent as RectTransform);
@@ -1026,11 +1019,10 @@ namespace BOforUnity.Examples
             label.text = "X";
             label.alignment = TextAlignmentOptions.Center;
             label.color = targetXColor;
-            label.fontSize = xFontSizePixels;
+            label.fontSize = Mathf.Max(1f, xFontSizePixels);
             label.fontStyle = FontStyles.Bold;
             label.enableWordWrapping = false;
             label.raycastTarget = false;
->>>>>>> upstream/main
             return label;
         }
 
@@ -1560,7 +1552,7 @@ namespace BOforUnity.Examples
                 // Always keep colour and size in sync in case Inspector values were
                 // changed at runtime (e.g. during Play mode tweaking).
                 marker.color = xMarkerColor;
-                marker.fontSize = Mathf.Max(1f, circleSizePixels * xMarkerSizeMultiplier);
+                marker.fontSize = Mathf.Max(1f, xFontSizePixels);
             }
         }
 
@@ -2202,11 +2194,8 @@ namespace BOforUnity.Examples
             _targetImages.Clear();
             _targetButtons.Clear();
             _targetRects.Clear();
-<<<<<<< HEAD
-            _xMarkers.Clear();
-=======
             _targetXLabels.Clear();
->>>>>>> upstream/main
+            _xMarkers.Clear();
         }
 
         private void RestoreCursor()
