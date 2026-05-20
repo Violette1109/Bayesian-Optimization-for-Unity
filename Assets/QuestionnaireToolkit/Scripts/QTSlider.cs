@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Windows.Forms;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -118,7 +116,7 @@ namespace QuestionnaireToolkit.Scripts
             if (!_oldHeaderName.Equals(headerName))
             {
                 _oldHeaderName = headerName;
-                name = name.Split('_')[0] + "_" + headerName;
+                name = QTOptionNameUtility.Compose(QTOptionNameUtility.GetValue(name), headerName);
                 _questionnaireManager.BuildHeaderItems();
             }
             
